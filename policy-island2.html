@@ -1,0 +1,4185 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>政策島 · Policy Island</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --coral:#db6a41; --ink:#211d1d; --cream:#fff8f4; --yellow:#fcea8b;
+  --stone:#c5b5a7; --green:#71806a;
+  --glass:rgba(255,250,244,.76);
+  --line:rgba(74,42,20,.12);
+  --shadow:0 18px 46px rgba(74,42,20,.16),0 3px 10px rgba(74,42,20,.08);
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(ellipse at 50% 32%,#fffdf9 0%,#f7eee2 52%,#edddcf 100%);font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased}
+body{overscroll-behavior:none;touch-action:none}
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;width:100%;height:100%}
+#labels{position:fixed;inset:0;pointer-events:none;z-index:6}
+button{font-family:var(--font);border:0;cursor:pointer;background:transparent;color:inherit;min-height:44px;border-radius:9px;transition:background .16s ease,color .16s ease,transform .16s ease}
+button:hover{background:var(--yellow)}
+button:active{background:var(--ink);color:var(--cream)}
+button:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+input{font-family:var(--font)}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:rgba(74,42,20,.18);border-radius:99px}
+::-webkit-scrollbar-track{background:transparent}
+
+.glass{background:var(--glass);backdrop-filter:blur(18px) saturate(1.15);-webkit-backdrop-filter:blur(18px) saturate(1.15);border:1px solid rgba(255,255,255,.7);box-shadow:var(--shadow)}
+
+#brand{position:fixed;left:16px;top:16px;z-index:20;padding:12px 18px 12px 16px;border-radius:18px;display:flex;align-items:center;gap:12px}
+#brand .mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(150deg,#db6a41,#f0a06c);display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+#brand h1{margin:0;font-size:19px;letter-spacing:.5px;line-height:1.1;font-weight:800}
+#brand h1 em{font-style:normal;color:var(--coral);margin-left:6px;font-size:13px;letter-spacing:2px;font-weight:700}
+#brand p{margin:3px 0 0;font-size:10px;letter-spacing:2.2px;text-transform:uppercase;color:#7a6a5c;font-family:var(--mono);font-weight:700}
+
+#toolLeft{position:fixed;left:16px;top:92px;z-index:20;display:flex;gap:6px;padding:6px;border-radius:14px}
+#toolLeft button{width:44px;min-height:44px;display:grid;place-items:center;font-size:16px;border-radius:9px;color:#4b3a2d}
+#toolLeft button.on{background:rgba(219,106,65,.14);color:var(--coral)}
+#toolLeft .ico{display:block;font-size:17px;line-height:1}
+
+.eyebrow{font-family:var(--mono);font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8a7868}
+</style>
+<style>
+/* ---------- left detail panel ---------- */
+#panel{position:fixed;left:16px;top:150px;width:340px;max-height:calc(100vh - 250px);z-index:18;border-radius:22px;overflow:hidden;display:none;flex-direction:column}
+#panel.show{display:flex}
+#panel .cardTop{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px 0}
+#panel .close{width:34px;min-height:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:16px;background:rgba(255,255,255,.7);color:#6b5a4c}
+#panel .cardScroll{overflow-y:auto;padding:2px 18px 18px}
+#panel h2{margin:4px 0 6px;font-size:24px;line-height:1.18;letter-spacing:-.3px}
+#panel h3{margin:16px 0 8px;font-size:10px;font-family:var(--mono);font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#8a7868}
+#panel p.lead{margin:0 0 12px;font-size:13px;line-height:1.7;color:#5b4a3d}
+#panel .summary{font-size:13.5px;line-height:1.75;color:#5b4a3d;margin:0 0 14px}
+#panel .thumbWrap{position:relative;border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#fdf6ec,#f2e2d2);border:1px solid rgba(255,255,255,.9);height:150px;display:grid;place-items:center;margin:2px 0 12px}
+#panel .thumbWrap img{width:150px;height:150px;display:block}
+#panel .thumbWrap .lbl{position:absolute;left:10px;bottom:8px;font-family:var(--mono);font-size:9px;letter-spacing:1.6px;color:#9a8878;font-weight:700}
+#panel .facts{display:flex;gap:8px;margin:0 0 6px}
+#panel .fact{flex:1;background:rgba(255,255,255,.78);border:1px solid rgba(255,255,255,.9);border-radius:13px;padding:9px 8px;text-align:center;box-shadow:0 3px 10px #4a2a1410;min-width:0}
+#panel .fact b{display:block;font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:23px;line-height:1;color:var(--coral);letter-spacing:-.5px}
+#panel .fact span{display:block;font-size:9.5px;color:#7d6b5c;margin-top:4px;line-height:1.3}
+#panel .tl{position:relative;margin:6px 0 4px;padding-top:16px}
+#panel .tl .track{position:absolute;left:7px;right:7px;top:23px;height:3px;border-radius:3px;background:linear-gradient(90deg,#e2cdbb,#f0dcc9)}
+#panel .tl .dots{display:flex;justify-content:space-between;position:relative}
+#panel .tl .dot{text-align:center;width:34%;}
+#panel .tl .dot i{display:block;width:15px;height:15px;border-radius:50%;margin:0 auto 7px;background:#fff;border:3px solid #e0cbb8}
+#panel .tl .dot.now i{border-color:var(--coral);background:var(--coral);box-shadow:0 0 0 4px rgba(219,106,65,.16)}
+#panel .tl .dot b{display:block;font-size:11px;font-weight:700}
+#panel .tl .dot span{display:block;font-size:9.5px;color:#8a7868;margin-top:2px}
+#panel .listRow{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:8px 9px;border-radius:11px;font-size:12.5px;min-height:40px;line-height:1.35;color:#3d2f24}
+#panel .listRow:hover{background:rgba(252,234,139,.55)}
+#panel .listRow b{flex:0 0 20px;height:20px;border-radius:50%;background:#f3e3d3;color:#8a6a52;font-size:10px;display:grid;place-items:center;font-weight:800}
+#panel .listRow .mdl{margin-left:auto;font-family:var(--mono);font-size:8.5px;letter-spacing:1px;color:#a5958a;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 10px;font-size:11px;background:#fff;box-shadow:0 2px 8px #4a2a1414;border:1px solid rgba(74,42,20,.06);color:#4d3c2f}
+.chip.coral{background:rgba(219,106,65,.12);color:#a8482a}
+.chip.ghost{background:rgba(255,255,255,.55)}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:7px 0;border-bottom:1px dashed rgba(74,42,20,.12)}
+.kv:last-child{border-bottom:0}
+.kv span{color:#8a7868}
+.kv b{font-weight:700;text-align:right}
+.bigRow{display:flex;align-items:baseline;gap:8px;margin:12px 0 2px}
+.bigRow b{font-family:Georgia,serif;font-style:italic;font-size:38px;line-height:1;color:var(--coral)}
+.bigRow span{font-size:12px;color:#7d6b5c}
+
+/* ---------- right sidebar ---------- */
+#sidebar{position:fixed;right:16px;top:228px;bottom:16px;width:318px;z-index:17;border-radius:20px;display:flex;flex-direction:column;overflow:hidden}
+#sidebar .sHead{padding:12px 12px 8px}
+#sidebar .searchWrap{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.9);border-radius:11px;padding:0 10px;height:40px;box-shadow:inset 0 1px 2px rgba(74,42,20,.05)}
+#sidebar .searchWrap input{flex:1;border:0;background:transparent;outline:none;font-size:12.5px;color:var(--ink);height:38px}
+#sidebar .searchWrap span{color:#a5958a;font-size:14px}
+.tabs{display:flex;gap:5px;margin-top:9px;background:rgba(255,255,255,.5);padding:4px;border-radius:11px}
+.tabs button{flex:1;min-height:34px;height:34px;border-radius:8px;font-size:11.5px;font-weight:700;color:#7d6b5c}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(74,42,20,.09)}
+#listBody{flex:1;overflow-y:auto;padding:4px 10px 14px}
+#sidebar details{border-radius:12px;margin:2px 0}
+#sidebar details[open]{background:rgba(255,255,255,.52);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8)}
+#sidebar summary{list-style:none;display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:12px;cursor:pointer;min-height:44px;font-size:13px;font-weight:700;color:#3d2f24}
+#sidebar summary::-webkit-details-marker{display:none}
+#sidebar summary:hover{background:rgba(252,234,139,.45)}
+#sidebar summary .num{font-family:var(--mono);font-size:9px;color:#a5958a;font-weight:700;letter-spacing:1px}
+#sidebar summary .ico{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-size:13px;background:rgba(219,106,65,.12)}
+#sidebar summary .cnt{margin-left:auto;font-size:9.5px;color:#a5958a;font-family:var(--mono);font-weight:700}
+#sidebar .items{padding:0 6px 6px}
+#sidebar .iRow{display:flex;align-items:flex-start;gap:7px;width:100%;text-align:left;padding:7px 8px;border-radius:8px;font-size:11.5px;line-height:1.45;min-height:34px;color:#5b4a3d}
+#sidebar .iRow:hover{background:#fff}
+#sidebar .iRow b{color:#b09a88;font-size:9px;font-family:var(--mono);min-width:12px;margin-top:2px}
+#sidebar .fRow{width:100%;text-align:left;padding:9px 10px;border-radius:11px;display:block;min-height:44px}
+#sidebar .fRow:hover{background:#fff}
+#sidebar .fRow .fl{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#3d2f24}
+#sidebar .fRow .fl i{font-style:normal;color:var(--coral)}
+#sidebar .fRow .sm{font-size:10.5px;color:#8a7868;margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ev{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;font-size:9px;font-weight:700;letter-spacing:.4px}
+.ev.official{background:rgba(88,166,166,.16);color:#2f7171}
+.ev.thematic{background:rgba(111,127,181,.16);color:#4a5a94}
+.ev.pending{background:rgba(197,181,167,.28);color:#7c6a5a}
+#sidebar .empty{font-size:11.5px;color:#9a8878;padding:18px 10px;text-align:center;line-height:1.7}
+
+/* ---------- HUD ---------- */
+#hud{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:19;display:flex;align-items:stretch;gap:10px;padding:8px;border-radius:18px}
+#hud .grp{display:flex;gap:3px;padding:3px;border-radius:13px;background:rgba(255,255,255,.45)}
+#hud .grp>div{display:flex;gap:2px}
+#hud button{width:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9.5px;color:#6b5a4c;padding:4px 2px;min-height:46px;line-height:1.2;border-radius:9px}
+#hud button .ico{font-size:15px;line-height:1}
+#hud button.on{background:rgba(219,106,65,.15);color:#b4502c}
+#hud .sep{width:1px;background:rgba(74,42,20,.1);margin:4px 2px}
+#hud .tbtn{font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;font-weight:700}
+</style>
+<style>
+/* ---------- journal ---------- */
+#journal{position:fixed;right:16px;top:16px;width:318px;max-height:196px;z-index:17;border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+#journal .jHead{display:flex;align-items:center;gap:7px;padding:10px 13px 7px;border-bottom:1px solid rgba(74,42,20,.08);flex-wrap:wrap}
+#journal .jHead b{font-size:12px;letter-spacing:.4px}
+#journal .live{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:8.5px;letter-spacing:1.4px;font-weight:700;color:#4d8a5c}
+#journal .live i{width:6px;height:6px;border-radius:50%;background:#4dbb6a;box-shadow:0 0 0 3px rgba(77,187,106,.18);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.35}}
+#journal .jfilters{display:flex;gap:4px;flex-wrap:wrap;padding:7px 10px 4px}
+#journal .jfilters button{font-size:9px;padding:3px 8px;min-height:24px;height:24px;border-radius:999px;background:rgba(255,255,255,.7);color:#7d6b5c}
+#journal .jfilters button.on{background:var(--ink);color:var(--cream)}
+#journal .jlist{overflow-y:auto;padding:2px 8px 10px;flex:1}
+#journal .jev{display:flex;gap:7px;align-items:flex-start;font-size:10.5px;line-height:1.45;padding:4px 5px;border-radius:7px;color:#5b4a3d}
+#journal .jev:nth-child(odd){background:rgba(255,255,255,.4)}
+#journal .jev time{font-family:var(--mono);font-size:9px;color:#a5958a;flex:0 0 32px;padding-top:1px}
+#journal .jev em{font-style:normal;font-weight:700;color:#3d2f24}
+#journal .jev .tag{font-family:var(--mono);font-size:8px;letter-spacing:.6px;padding:1px 4px;border-radius:4px;background:rgba(219,106,65,.14);color:#a8482a;text-transform:uppercase}
+
+/* ---------- legend / toast ---------- */
+#legend{position:fixed;left:16px;bottom:92px;z-index:16;border-radius:14px;padding:9px 12px;display:none;font-size:10.5px;color:#5b4a3d;min-width:150px}
+#legend.show{display:block}
+#panel.show ~ #legend{left:372px}
+#legend b{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:1.6px;color:#8a7868;margin-bottom:6px;font-weight:700}
+#legend .row{display:flex;align-items:center;gap:7px;padding:2px 0}
+#legend .sm{color:#8a7868;font-size:9.5px;margin-left:auto}
+#legend .sw{width:26px;height:0;border-top:3px solid var(--coral);border-radius:2px}
+#legend .sw.dash{border-top:3px dashed var(--coral)}
+#legend .sw.dot{border-top:3px dotted var(--coral)}
+
+#toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,12px);z-index:24;padding:9px 16px;border-radius:999px;background:rgba(33,29,29,.9);color:#fff8f4;font-size:12px;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- loader ---------- */
+#loader{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 38%,#fffdf9,#f4e7d8 60%,#e8d5c4);transition:opacity .5s ease}
+#loader.done{opacity:0;pointer-events:none}
+#loader .inner{text-align:center;max-width:390px;padding:0 24px}
+#loader .hexes{display:flex;justify-content:center;gap:7px;margin-bottom:18px}
+#loader .hexes i{width:16px;height:18px;background:var(--coral);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);opacity:.3;animation:hexp 1.5s infinite}
+#loader .hexes i:nth-child(2){animation-delay:.16s}
+#loader .hexes i:nth-child(3){animation-delay:.32s}
+@keyframes hexp{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-6px)}}
+#loader h2{margin:0 0 8px;font-size:23px;letter-spacing:1px}
+#loader p{margin:0;font-size:12px;color:#7d6b5c;letter-spacing:1px;font-family:var(--mono)}
+#loader .bar{width:180px;height:3px;border-radius:3px;background:rgba(74,42,20,.1);margin:18px auto 0;overflow:hidden}
+#loader .bar i{display:block;height:100%;width:38%;background:var(--coral);border-radius:3px;animation:load 1.4s infinite ease-in-out}
+@keyframes load{0%{transform:translateX(-100%)}100%{transform:translateX(360%)}}
+#loader.error .hexes,#loader.error .bar{display:none}
+#loader.error h2{color:#b4502c}
+#loader.error p{color:#8a3b24;font-family:var(--font);letter-spacing:0;line-height:1.7;white-space:pre-wrap}
+#loader button{margin-top:16px;background:var(--ink);color:#fff8f4;padding:0 18px}
+
+/* ---------- tour ---------- */
+#tour{position:fixed;inset:0;z-index:60;display:none;place-items:center;background:rgba(33,29,29,.34);backdrop-filter:blur(5px);padding:20px}
+#tour.show{display:grid}
+#tour .box{width:min(460px,100%);border-radius:24px;padding:26px 26px 20px;background:rgba(255,252,247,.94);box-shadow:0 30px 80px rgba(50,25,10,.3)}
+#tour h2{margin:6px 0 4px;font-size:25px;letter-spacing:-.3px}
+#tour p{margin:0 0 18px;font-size:12.5px;line-height:1.7;color:#6b5a4c}
+#tour .step{display:flex;gap:12px;padding:11px 0;border-top:1px solid rgba(74,42,20,.09)}
+#tour .step b{flex:0 0 30px;height:30px;border-radius:10px;background:rgba(219,106,65,.14);color:#b4502c;display:grid;place-items:center;font-family:Georgia,serif;font-style:italic;font-size:15px}
+#tour .step .tx{font-size:13px;font-weight:700;line-height:1.4}
+#tour .step .tx span{display:block;font-weight:400;font-size:11px;color:#8a7868;margin-top:2px;line-height:1.5}
+#tour .go{width:100%;margin-top:14px;background:var(--coral);color:#fff;font-weight:700;font-size:14px;min-height:46px;border-radius:11px}
+#tour .go:hover{background:#c95a33}
+
+/* ---------- CSS2D labels ---------- */
+.islLabel{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;background:rgba(255,252,247,.92);border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(74,42,20,.18);font-size:10.5px;font-weight:700;color:#4d3c2f;white-space:nowrap;margin-bottom:6px;transition:opacity .2s,background .2s;pointer-events:auto;cursor:pointer}
+.islLabel b{font-family:var(--mono);font-size:8px;color:#b09a88;letter-spacing:.5px}
+.islLabel.dim{opacity:.42}
+.islLabel.ink{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.islLabel.ink b{color:#e8b59d}
+.pin{display:flex;align-items:center;gap:4px;padding:2px 8px 2px 3px;border-radius:999px;background:rgba(255,255,255,.94);box-shadow:0 4px 12px rgba(74,42,20,.2);font-size:10px;font-weight:700;white-space:nowrap;color:#3d2f24;margin-bottom:22px;transform-origin:50% 100%}
+.pin b{width:17px;height:17px;border-radius:50%;background:var(--coral);color:#fff;display:grid;place-items:center;font-size:9px;font-weight:800}
+.pin.mini{padding-right:3px}
+.pin.mini span{display:none}
+.bubble{padding:3px 8px;border-radius:9px;background:rgba(255,252,247,.96);box-shadow:0 4px 12px rgba(74,42,20,.2);font-size:9.5px;color:#4d3c2f;white-space:nowrap;margin-bottom:30px;font-weight:600}
+.bubble b{color:var(--coral)}
+.hide{display:none!important}
+
+/* ---------- mobile ---------- */
+#mobileTime{display:none}
+#hud #mobileTime{display:none}
+#sheetDock{display:none}
+@media (max-width:800px){
+  #brand{left:10px;top:10px;padding:9px 13px;border-radius:15px;gap:9px}
+  #brand .mark{width:32px;height:32px;border-radius:9px;font-size:15px}
+  #brand h1{font-size:15px}
+  #brand h1 em{font-size:10px;letter-spacing:1.4px}
+  #brand p{font-size:8px;letter-spacing:1.4px}
+  #toolLeft{top:76px;bottom:auto;left:10px;flex-direction:column;padding:5px;gap:4px;border-radius:13px}
+  #toolLeft button{width:42px;min-height:42px;font-size:15px}
+  #journal{right:10px;top:10px;left:10px;width:auto;max-height:120px;display:none}
+  #journal.show{display:flex}
+  #sidebar,#panel{left:0;right:0;bottom:0;top:auto;width:100%;max-height:92vh;height:52%;border-radius:22px 22px 0 0;transform:translateY(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);display:flex;z-index:30;padding-bottom:env(safe-area-inset-bottom)}
+  #panel{height:34%}
+  #sidebar.show,#panel.show{transform:translateY(0)}
+  #panel.show{display:flex}
+  #journal{display:none}
+  #hud{left:auto;right:10px;bottom:10px;transform:none;padding:6px;border-radius:15px;gap:6px}
+  #hud .grp.timeGrp,#hud .grp:nth-child(2) .sep,#hud .grp:nth-child(2)>div button:not(.keep){display:none}
+  #hud .grp:nth-child(2)>div{flex-wrap:wrap;justify-content:flex-end;max-width:190px}
+  #hud .grp:nth-child(2)>div button{width:40px;min-height:40px;font-size:8.5px}
+  #hud.mobOpen .grp.timeGrp{display:flex;position:absolute;right:0;bottom:66px;background:rgba(255,250,244,.92);box-shadow:var(--shadow);border-radius:13px}
+  #mobileTime{display:flex}
+  #hud #mobileTime{display:flex}
+  #legend{bottom:150px;left:10px;font-size:10px}
+  #tour .box{padding:20px 18px 16px}
+  #tour h2{font-size:21px}
+}
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="stage"></div>
+<div id="labels"></div>
+
+<header id="brand" class="glass">
+  <div class="mark">島</div>
+  <div>
+    <h1><span data-en="Demo City">{示範市}</span><em data-en="Policy Island">政策島</em></h1>
+    <p><span data-en="12 themes · 48 policies · one tiny city">12 主題 · 48 政策 · 一座小城市</span></p>
+  </div>
+</header>
+
+<nav id="toolLeft" class="glass" aria-label="view tools">
+  <button id="btnOverview" title="全景 Overview" data-en-title="Overview"><span class="ico">⛶</span></button>
+  <button id="btnList" title="清單 List" data-en-title="List"><span class="ico">☰</span></button>
+  <button id="btnHelp" title="說明 Help" data-en-title="Help"><span class="ico">?</span></button>
+</nav>
+
+<aside id="panel" class="glass" aria-live="polite">
+  <div class="cardTop">
+    <span class="eyebrow" id="panelEye">POLICY</span>
+    <button class="close" id="panelClose" aria-label="關閉 Close">✕</button>
+  </div>
+  <div class="cardScroll" id="panelBody"></div>
+</aside>
+
+<aside id="sidebar" class="glass">
+  <div class="sHead">
+    <div class="searchWrap"><span>⌕</span><input id="search" type="search" placeholder="搜尋政策、數字或主題…" data-en-ph="Search policies, numbers, themes…"></div>
+    <div class="tabs">
+      <button class="on" data-tab="themes" data-en="Themes">政策主題</button>
+      <button data-tab="flows" data-en="Links">協作關係</button>
+    </div>
+  </div>
+  <div id="listBody"></div>
+</aside>
+
+<section id="journal" class="glass" aria-label="city log">
+  <div class="jHead">
+    <span class="live"><i></i>LIVE</span>
+    <b data-en="City log">城市日誌</b>
+  </div>
+  <div class="jfilters" id="jFilters"></div>
+  <div class="jlist" id="jList"></div>
+</section>
+
+<div id="hud" class="glass">
+  <div class="grp timeGrp">
+    <div>
+      <button class="tbtn" data-time="360">06<span data-en="DAWN">清晨</span></button>
+      <button class="tbtn" data-time="720">12<span data-en="DAY">白天</span></button>
+      <button class="tbtn" data-time="1080">18<span data-en="DUSK">黃昏</span></button>
+      <button class="tbtn" data-time="1260">21<span data-en="NIGHT">夜晚</span></button>
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="grp">
+    <div>
+      <button class="keep" data-toggle="names"><span class="ico">🏷</span><span data-en="Names">名牌</span></button>
+      <button data-toggle="cargo"><span class="ico">📦</span><span data-en="Cargo">搬運</span></button>
+      <button data-toggle="flows"><span class="ico">〰</span><span data-en="Links">協作線</span></button>
+      <button data-toggle="paused"><span class="ico">❚❚</span><span data-en="Pause">暫停</span></button>
+      <button data-toggle="bird"><span class="ico">⌖</span><span data-en="Aerial">鳥瞰</span></button>
+      <button data-toggle="journal"><span class="ico">≡</span><span data-en="Log">日誌</span></button>
+    </div>
+  </div>
+  <button id="mobileTime" class="keep"><span class="ico">◷</span><span data-en="Time">時間</span></button>
+</div>
+
+<div id="legend" class="glass">
+  <b>COLLABORATION</b>
+  <div class="row"><span class="sw"></span>official<span class="sm" data-en="formal">正式</span></div>
+  <div class="row"><span class="sw dash"></span>thematic<span class="sm" data-en="thematic">主題</span></div>
+  <div class="row"><span class="sw dot"></span>pending<span class="sm" data-en="unconfirmed">待確認</span></div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<div id="loader">
+  <div class="inner">
+    <div class="hexes"><i></i><i></i><i></i></div>
+    <h2 data-en="Assembling the policy city…">正在組合政策城市…</h2>
+    <p id="loadMsg" data-en="Loading Three.js 0.160 · procedural geometry">載入 Three.js 0.160 · 程序化幾何</p>
+    <div class="bar"><i></i></div>
+  </div>
+</div>
+
+<div id="tour" role="dialog" aria-modal="true">
+  <div class="box">
+    <span class="eyebrow">HOW TO WANDER</span>
+    <h2 data-en="Three steps, one tiny city">三步驟，逛一座小城市</h2>
+    <p data-en="A demonstration city built from 12 hexagonal islands. Everything here is fictional sample data.">一座由 12 座六角小島組成的示範城市。所有內容皆為虛構示範資料。</p>
+    <div class="step"><b>1</b><div class="tx"><span data-en="Tap an island">點一座島</span><span data-en="Each island is one policy theme. Drag to orbit, scroll to zoom.">每座島是一個政策主題。拖曳旋轉、滾輪縮放。</span></div></div>
+    <div class="step"><b>2</b><div class="tx"><span data-en="Open an item">點一個細項</span><span data-en="See the numbers, the model, and the 4-year timeline.">看數字、模型縮圖與四年時程。</span></div></div>
+    <div class="step"><b>3</b><div class="tx"><span data-en="Turn on Links">打開「協作線」</span><span data-en="Watch people carry books, meal boxes and seedlings between islands.">看小人搬著書、餐盒與樹苗往返島嶼。</span></div></div>
+    <button class="go" id="tourGo" data-en="Enter the city">進入城市</button>
+  </div>
+</div>
+
+<script>
+window.__islandBoot = false;
+window.__islandErrors = [];
+window.addEventListener('error', function(e){
+  window.__islandErrors.push(String(e.message || 'module load error'));
+  if(!window.__islandBoot){ showLoadError('載入失敗：' + (e.message || 'CDN 或模組無法載入') + '\n請確認網路連線後重新整理。'); }
+});
+function showLoadError(msg){
+  var l = document.getElementById('loader');
+  if(!l) return;
+  l.classList.add('error');
+  var h = l.querySelector('h2'); if(h){ h.textContent = '無法啟動 3D 城市'; }
+  var p = document.getElementById('loadMsg'); if(p){ p.textContent = msg; }
+}
+setTimeout(function(){
+  if(!window.__islandBoot){
+    showLoadError('Three.js 載入逾時（CDN 無回應或 WebGL 不可用）。\n請檢查網路，或改用支援 WebGL 的瀏覽器。');
+  }
+}, 16000);
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
+import { SimplexNoise } from 'three/addons/math/SimplexNoise.js';
+
+/* =========================================================
+   DATA — every number, island, flow and hour lives here.
+   All content is fictional demonstration data.
+   ========================================================= */
+const DATA = {
+  "city": {
+    "zh": "艾多美新人",
+    "en": "Atomy Newman City"
+  },
+  "themes": [
+    {
+      "id": "transit",
+      "num": "01",
+      "zh": "加入",
+      "en": "join",
+      "icon": "🚌",
+      "ground": "brick",
+      "color": "#db6a41",
+      "zhSum": "免費加入還送您300元購物金，後續也無任何費用。",
+      "enSum": "Joining for free will also give you a 300 yuan shopping credit, and there are no further fees.",
+      "items": [
+        {
+          "id": "transit-1",
+          "zh": "社區公車微循環",
+          "en": "Neighbourhood shuttle loop",
+          "d": "小型公車繞進社區巷口，尖峰十二分鐘一班。",
+          "de": "Small buses loop into residential lanes every 12 minutes at peak.",
+          "facts": [
+            {
+              "v": "12",
+              "zh": "分鐘／班",
+              "en": "min / trip"
+            },
+            {
+              "v": "38",
+              "zh": "個站點",
+              "en": "stops"
+            },
+            {
+              "v": "92",
+              "zh": "% 準點率",
+              "en": "% on time"
+            }
+          ],
+          "phase": 1,
+          "model": "bus"
+        },
+        {
+          "id": "transit-2",
+          "zh": "通學步道改善",
+          "en": "Safe school walks",
+          "d": "十八所學校周邊拓寬人行道、補足照明與庇護島。",
+          "de": "Wider footpaths, lighting and refuge islands around 18 schools.",
+          "facts": [
+            {
+              "v": "18",
+              "zh": "所學校",
+              "en": "schools"
+            },
+            {
+              "v": "4.2",
+              "zh": "公里步道",
+              "en": "km of path"
+            },
+            {
+              "v": "76",
+              "zh": "% 家長支持",
+              "en": "% parents approve"
+            }
+          ],
+          "phase": 1,
+          "model": "park"
+        },
+        {
+          "id": "transit-3",
+          "zh": "共享單車站點",
+          "en": "Shared bike stations",
+          "d": "捷運站與市場外增設站點，尖峰調度加倍。",
+          "de": "More docks outside stations and markets, doubled peak rebalancing.",
+          "facts": [
+            {
+              "v": "60",
+              "zh": "個站點",
+              "en": "stations"
+            },
+            {
+              "v": "1,200",
+              "zh": "輛單車",
+              "en": "bikes"
+            },
+            {
+              "v": "3",
+              "zh": "分鐘借還",
+              "en": "min to rent"
+            }
+          ],
+          "phase": 2,
+          "model": "bike"
+        },
+        {
+          "id": "transit-4",
+          "zh": "夜間安心候車亭",
+          "en": "Night-safe bus shelters",
+          "d": "二十四座候車亭加裝感應照明與一鍵求助。",
+          "de": "24 shelters get motion lighting and a one-touch help button.",
+          "facts": [
+            {
+              "v": "24",
+              "zh": "座候車亭",
+              "en": "shelters"
+            },
+            {
+              "v": "18:00",
+              "zh": "亮燈至 01:00",
+              "en": "lit until 01:00"
+            },
+            {
+              "v": "99",
+              "zh": "% 照明覆蓋",
+              "en": "% lit"
+            }
+          ],
+          "phase": 3,
+          "model": "kiosk"
+        }
+      ]
+    },
+    {
+      "id": "childcare",
+      "num": "02",
+      "zh": "托育",
+      "en": "Childcare",
+      "icon": "👶",
+      "ground": "speckle",
+      "color": "#f2b5c6",
+      "zhSum": "從臨托到夜托，讓照顧不再只能靠一個人。",
+      "enSum": "From drop-in to night care, looking after a child is shared work.",
+      "items": [
+        {
+          "id": "childcare-1",
+          "zh": "社區托育中心",
+          "en": "Community childcare hubs",
+          "d": "八處中心收托兩歲以下幼兒，走路十分鐘可達。",
+          "de": "Eight hubs take under-twos, all within a ten-minute walk.",
+          "facts": [
+            {
+              "v": "8",
+              "zh": "處中心",
+              "en": "hubs"
+            },
+            {
+              "v": "240",
+              "zh": "個名額",
+              "en": "places"
+            },
+            {
+              "v": "10",
+              "zh": "分鐘步行",
+              "en": "min walk"
+            }
+          ],
+          "phase": 1,
+          "model": "house"
+        },
+        {
+          "id": "childcare-2",
+          "zh": "夜間臨時托育",
+          "en": "Night drop-in care",
+          "d": "週五至週日開放到深夜，服務輪班家庭。",
+          "de": "Open late Friday to Sunday for shift-working families.",
+          "facts": [
+            {
+              "v": "3",
+              "zh": "處夜托",
+              "en": "night sites"
+            },
+            {
+              "v": "68",
+              "zh": "個家庭",
+              "en": "families"
+            },
+            {
+              "v": "23:00",
+              "zh": "最晚接回",
+              "en": "latest pickup"
+            }
+          ],
+          "phase": 2,
+          "model": "kiosk"
+        },
+        {
+          "id": "childcare-3",
+          "zh": "托育人員加薪",
+          "en": "Better pay for carers",
+          "d": "調升十五％起薪，搭配每年四十小時在職訓練。",
+          "de": "A 15% starting-pay rise plus 40 hours of yearly training.",
+          "facts": [
+            {
+              "v": "15",
+              "zh": "% 加薪",
+              "en": "% pay rise"
+            },
+            {
+              "v": "320",
+              "zh": "位托育員",
+              "en": "carers"
+            },
+            {
+              "v": "-8",
+              "zh": "% 離職率",
+              "en": "% turnover"
+            }
+          ],
+          "phase": 2,
+          "model": "classroom"
+        },
+        {
+          "id": "childcare-4",
+          "zh": "親子友善廁所",
+          "en": "Family-friendly toilets",
+          "d": "四十五處公共空間增設尿布台與親子廁間。",
+          "de": "45 public places add changing tables and family cubicles.",
+          "facts": [
+            {
+              "v": "45",
+              "zh": "處空間",
+              "en": "sites"
+            },
+            {
+              "v": "120",
+              "zh": "座尿布台",
+              "en": "tables"
+            },
+            {
+              "v": "3",
+              "zh": "年完成",
+              "en": "years"
+            }
+          ],
+          "phase": 3,
+          "model": "house"
+        }
+      ]
+    },
+    {
+      "id": "education",
+      "num": "03",
+      "zh": "教育",
+      "en": "Education",
+      "icon": "📚",
+      "ground": "stripe",
+      "color": "#6f7fb5",
+      "zhSum": "把學習放進走路會經過的地方。",
+      "enSum": "Put learning where people already walk.",
+      "items": [
+        {
+          "id": "education-1",
+          "zh": "雙語閱讀角",
+          "en": "Bilingual reading corners",
+          "d": "三十二所學校設置開放閱讀角，放學後仍可借書。",
+          "de": "32 schools open reading corners that stay open after class.",
+          "facts": [
+            {
+              "v": "32",
+              "zh": "所學校",
+              "en": "schools"
+            },
+            {
+              "v": "6,400",
+              "zh": "冊藏書",
+              "en": "books"
+            },
+            {
+              "v": "21:00",
+              "zh": "開放至",
+              "en": "open until"
+            }
+          ],
+          "phase": 1,
+          "model": "book"
+        },
+        {
+          "id": "education-2",
+          "zh": "技職實作基地",
+          "en": "Hands-on trade base",
+          "d": "五座基地與在地職人合作，開十八門實作課。",
+          "de": "Five workshops with local craftspeople, 18 hands-on courses.",
+          "facts": [
+            {
+              "v": "5",
+              "zh": "座基地",
+              "en": "bases"
+            },
+            {
+              "v": "18",
+              "zh": "門課程",
+              "en": "courses"
+            },
+            {
+              "v": "640",
+              "zh": "位學生",
+              "en": "students"
+            }
+          ],
+          "phase": 2,
+          "model": "classroom"
+        },
+        {
+          "id": "education-3",
+          "zh": "課後程式社團",
+          "en": "After-school coding clubs",
+          "d": "四十八班免費社團，優先開放給偏遠學區。",
+          "de": "48 free clubs, prioritising remote school districts.",
+          "facts": [
+            {
+              "v": "48",
+              "zh": "個班級",
+              "en": "clubs"
+            },
+            {
+              "v": "1,150",
+              "zh": "位學生",
+              "en": "students"
+            },
+            {
+              "v": "0",
+              "zh": "元學費",
+              "en": "fees"
+            }
+          ],
+          "phase": 2,
+          "model": "classroom"
+        },
+        {
+          "id": "education-4",
+          "zh": "老校舍耐震補強",
+          "en": "School seismic retrofit",
+          "d": "二十二棟老校舍分三年補強，暑假施工不影響上課。",
+          "de": "22 old buildings retrofitted over three summers.",
+          "facts": [
+            {
+              "v": "22",
+              "zh": "棟校舍",
+              "en": "buildings"
+            },
+            {
+              "v": "3",
+              "zh": "年工期",
+              "en": "years"
+            },
+            {
+              "v": "0",
+              "zh": "天停課",
+              "en": "days closed"
+            }
+          ],
+          "phase": 3,
+          "model": "house"
+        }
+      ]
+    },
+    {
+      "id": "care",
+      "num": "04",
+      "zh": "長照",
+      "en": "Elder care",
+      "icon": "🫶",
+      "ground": "brick",
+      "color": "#3e7c8c",
+      "zhSum": "把照顧送到巷口，也送到家門口。",
+      "enSum": "Care at the alley corner, and care at the front door.",
+      "items": [
+        {
+          "id": "care-1",
+          "zh": "巷弄長照站",
+          "en": "Corner care stations",
+          "d": "二十六站提供共餐、量測與喘息，走路八分鐘可到。",
+          "de": "26 stations for meals, check-ups and respite, eight minutes away.",
+          "facts": [
+            {
+              "v": "26",
+              "zh": "個站點",
+              "en": "stations"
+            },
+            {
+              "v": "8",
+              "zh": "分鐘步行",
+              "en": "min walk"
+            },
+            {
+              "v": "4,200",
+              "zh": "位長者",
+              "en": "elders"
+            }
+          ],
+          "phase": 1,
+          "model": "clinic"
+        },
+        {
+          "id": "care-2",
+          "zh": "失智共照中心",
+          "en": "Dementia joint-care centre",
+          "d": "四處中心串接醫院與社區，個案管理不中斷。",
+          "de": "Four centres link hospitals and community case managers.",
+          "facts": [
+            {
+              "v": "4",
+              "zh": "處中心",
+              "en": "centres"
+            },
+            {
+              "v": "1,800",
+              "zh": "服務人次",
+              "en": "visits"
+            },
+            {
+              "v": "1",
+              "zh": "位個管師",
+              "en": "case manager"
+            }
+          ],
+          "phase": 2,
+          "model": "clinic"
+        },
+        {
+          "id": "care-3",
+          "zh": "到宅沐浴車",
+          "en": "Mobile bath service",
+          "d": "六台沐浴車到宅服務，每趟兩位照服員同行。",
+          "de": "Six mobile bath units, two carers per visit.",
+          "facts": [
+            {
+              "v": "6",
+              "zh": "台車輛",
+              "en": "vans"
+            },
+            {
+              "v": "480",
+              "zh": "趟服務",
+              "en": "visits"
+            },
+            {
+              "v": "2",
+              "zh": "位照服員",
+              "en": "carers"
+            }
+          ],
+          "phase": 2,
+          "model": "bus"
+        },
+        {
+          "id": "care-4",
+          "zh": "照顧者喘息時數",
+          "en": "Respite hours",
+          "d": "每年提供一萬兩千小時喘息，可夜間與假日使用。",
+          "de": "12,000 respite hours a year, usable at night and weekends.",
+          "facts": [
+            {
+              "v": "12,000",
+              "zh": "小時",
+              "en": "hours"
+            },
+            {
+              "v": "24",
+              "zh": "小時可預約",
+              "en": "h booking"
+            },
+            {
+              "v": "0",
+              "zh": "元自付",
+              "en": "co-pay"
+            }
+          ],
+          "phase": 3,
+          "model": "house"
+        }
+      ]
+    },
+    {
+      "id": "sports",
+      "num": "05",
+      "zh": "運動",
+      "en": "Sports",
+      "icon": "🏃",
+      "ground": "speckle",
+      "color": "#71806a",
+      "zhSum": "球場亮到十點，阿公阿嬤也有肌力課。",
+      "enSum": "Courts lit until ten; strength classes for grandparents too.",
+      "items": [
+        {
+          "id": "sports-1",
+          "zh": "河濱球場夜間照明",
+          "en": "Riverside court lighting",
+          "d": "九座球場加裝節能燈，夜間開放至十點。",
+          "de": "Nine courts get efficient lights, open until 22:00.",
+          "facts": [
+            {
+              "v": "9",
+              "zh": "座球場",
+              "en": "courts"
+            },
+            {
+              "v": "22:00",
+              "zh": "關燈",
+              "en": "lights off"
+            },
+            {
+              "v": "-38",
+              "zh": "% 用電",
+              "en": "% energy"
+            }
+          ],
+          "phase": 1,
+          "model": "court"
+        },
+        {
+          "id": "sports-2",
+          "zh": "銀髮肌力站",
+          "en": "Senior strength stations",
+          "d": "十八處公園增設低衝擊器材與每週指導課。",
+          "de": "18 parks add low-impact equipment and weekly coaching.",
+          "facts": [
+            {
+              "v": "18",
+              "zh": "處站點",
+              "en": "stations"
+            },
+            {
+              "v": "2",
+              "zh": "堂課／週",
+              "en": "classes/wk"
+            },
+            {
+              "v": "1,900",
+              "zh": "位參與",
+              "en": "participants"
+            }
+          ],
+          "phase": 2,
+          "model": "court"
+        },
+        {
+          "id": "sports-3",
+          "zh": "校園泳池假日開放",
+          "en": "Weekend school pools",
+          "d": "七所學校泳池假日對外開放，線上預約。",
+          "de": "Seven school pools open on weekends with online booking.",
+          "facts": [
+            {
+              "v": "7",
+              "zh": "所學校",
+              "en": "pools"
+            },
+            {
+              "v": "50",
+              "zh": "元入場",
+              "en": "entry fee"
+            },
+            {
+              "v": "900",
+              "zh": "人次／日",
+              "en": "visits/day"
+            }
+          ],
+          "phase": 2,
+          "model": "river"
+        },
+        {
+          "id": "sports-4",
+          "zh": "城市路跑環線",
+          "en": "City running loop",
+          "d": "十二公里環線串起河堤與公園，增設飲水站。",
+          "de": "A 12 km loop linking riverbank and parks, with water stops.",
+          "facts": [
+            {
+              "v": "12",
+              "zh": "公里",
+              "en": "km"
+            },
+            {
+              "v": "8",
+              "zh": "座飲水站",
+              "en": "water stops"
+            },
+            {
+              "v": "0",
+              "zh": "元使用",
+              "en": "free"
+            }
+          ],
+          "phase": 3,
+          "model": "park"
+        }
+      ]
+    },
+    {
+      "id": "green",
+      "num": "06",
+      "zh": "綠地",
+      "en": "Green space",
+      "icon": "🌳",
+      "ground": "stripe",
+      "color": "#9cc27a",
+      "zhSum": "轉角就有樹蔭，夏天少走兩條街。",
+      "enSum": "Shade at the corner, two streets less in summer heat.",
+      "items": [
+        {
+          "id": "green-1",
+          "zh": "口袋公園",
+          "en": "Pocket parks",
+          "d": "十四座閒置空地變公園，平均零點四公頃。",
+          "de": "14 vacant lots become parks, 0.4 hectares on average.",
+          "facts": [
+            {
+              "v": "14",
+              "zh": "座公園",
+              "en": "parks"
+            },
+            {
+              "v": "0.4",
+              "zh": "公頃平均",
+              "en": "ha avg"
+            },
+            {
+              "v": "5",
+              "zh": "分鐘可達",
+              "en": "min walk"
+            }
+          ],
+          "phase": 1,
+          "model": "park"
+        },
+        {
+          "id": "green-2",
+          "zh": "行道樹補植",
+          "en": "Street tree replanting",
+          "d": "三年補植三千二百棵，優先高溫里別。",
+          "de": "3,200 trees over three years, hottest districts first.",
+          "facts": [
+            {
+              "v": "3,200",
+              "zh": "棵樹",
+              "en": "trees"
+            },
+            {
+              "v": "92",
+              "zh": "% 存活率",
+              "en": "% survival"
+            },
+            {
+              "v": "3",
+              "zh": "年計畫",
+              "en": "years"
+            }
+          ],
+          "phase": 1,
+          "model": "farm"
+        },
+        {
+          "id": "green-3",
+          "zh": "公園遮蔭網",
+          "en": "Park shade sails",
+          "d": "二十二處遊戲場加遮蔭，實測降溫三度。",
+          "de": "22 playgrounds get shade sails, measured 3°C cooler.",
+          "facts": [
+            {
+              "v": "22",
+              "zh": "處遊戲場",
+              "en": "playgrounds"
+            },
+            {
+              "v": "3",
+              "zh": "°C 降溫",
+              "en": "°C cooler"
+            },
+            {
+              "v": "1",
+              "zh": "年完工",
+              "en": "year"
+            }
+          ],
+          "phase": 2,
+          "model": "kiosk"
+        },
+        {
+          "id": "green-4",
+          "zh": "社區農園",
+          "en": "Community gardens",
+          "d": "九處農園、二百一十畦，優先給社區志工。",
+          "de": "Nine gardens, 210 plots, prioritised for local volunteers.",
+          "facts": [
+            {
+              "v": "9",
+              "zh": "處農園",
+              "en": "gardens"
+            },
+            {
+              "v": "210",
+              "zh": "畦",
+              "en": "plots"
+            },
+            {
+              "v": "0",
+              "zh": "元租金",
+              "en": "rent"
+            }
+          ],
+          "phase": 3,
+          "model": "farm"
+        }
+      ]
+    },
+    {
+      "id": "culture",
+      "num": "07",
+      "zh": "文化",
+      "en": "Culture",
+      "icon": "🎭",
+      "ground": "brick",
+      "color": "#c5b5a7",
+      "zhSum": "老屋、市場與夜裡的舞台都留著。",
+      "enSum": "Old houses, market theatres and a stage after dark.",
+      "items": [
+        {
+          "id": "culture-1",
+          "zh": "老屋再生",
+          "en": "Old house revival",
+          "d": "十一棟老屋修復後出租給小店與工作室。",
+          "de": "11 old houses restored and rented to small shops and studios.",
+          "facts": [
+            {
+              "v": "11",
+              "zh": "棟老屋",
+              "en": "houses"
+            },
+            {
+              "v": "4,600",
+              "zh": "萬元經費",
+              "en": "k TWD"
+            },
+            {
+              "v": "28",
+              "zh": "間工作室",
+              "en": "studios"
+            }
+          ],
+          "phase": 1,
+          "model": "house"
+        },
+        {
+          "id": "culture-2",
+          "zh": "市場裡的劇場",
+          "en": "Theatre in the market",
+          "d": "六場移動劇場在傳統市場演出，免費入場。",
+          "de": "Six moving theatre pieces staged inside traditional markets.",
+          "facts": [
+            {
+              "v": "6",
+              "zh": "場演出",
+              "en": "shows"
+            },
+            {
+              "v": "3,200",
+              "zh": "位觀眾",
+              "en": "audience"
+            },
+            {
+              "v": "0",
+              "zh": "元票價",
+              "en": "tickets"
+            }
+          ],
+          "phase": 2,
+          "model": "stage"
+        },
+        {
+          "id": "culture-3",
+          "zh": "城市導覽員",
+          "en": "City guides",
+          "d": "四十位在地導覽員，規劃一百二十條走路路線。",
+          "de": "40 local guides and 120 walking routes.",
+          "facts": [
+            {
+              "v": "40",
+              "zh": "位導覽員",
+              "en": "guides"
+            },
+            {
+              "v": "120",
+              "zh": "條路線",
+              "en": "routes"
+            },
+            {
+              "v": "90",
+              "zh": "分鐘／場",
+              "en": "min/tour"
+            }
+          ],
+          "phase": 2,
+          "model": "kiosk"
+        },
+        {
+          "id": "culture-4",
+          "zh": "夜間美術館",
+          "en": "Late-night museum",
+          "d": "每週五開放到九點，居民免費。",
+          "de": "Open to 21:00 on Fridays, free for residents.",
+          "facts": [
+            {
+              "v": "21:00",
+              "zh": "閉館",
+              "en": "close"
+            },
+            {
+              "v": "52",
+              "zh": "場／年",
+              "en": "nights/yr"
+            },
+            {
+              "v": "0",
+              "zh": "元居民票",
+              "en": "resident fee"
+            }
+          ],
+          "phase": 3,
+          "model": "stage"
+        }
+      ]
+    },
+    {
+      "id": "youth",
+      "num": "08",
+      "zh": "青年",
+      "en": "Youth",
+      "icon": "🚀",
+      "ground": "speckle",
+      "color": "#db6a41",
+      "zhSum": "租金、實習與第一張訂單，都從這裡開始。",
+      "enSum": "Rent help, internships and a first order start here.",
+      "items": [
+        {
+          "id": "youth-1",
+          "zh": "青年創業基地",
+          "en": "Youth startup base",
+          "d": "三處基地提供共享工位與一對一顧問。",
+          "de": "Three bases with shared desks and one-to-one mentors.",
+          "facts": [
+            {
+              "v": "3",
+              "zh": "處基地",
+              "en": "bases"
+            },
+            {
+              "v": "90",
+              "zh": "組團隊",
+              "en": "teams"
+            },
+            {
+              "v": "1",
+              "zh": "位顧問",
+              "en": "mentor"
+            }
+          ],
+          "phase": 1,
+          "model": "hall"
+        },
+        {
+          "id": "youth-2",
+          "zh": "租金補貼",
+          "en": "Rent support",
+          "d": "二千四百戶青年每月補貼三千二百元。",
+          "de": "2,400 young households get 3,200 TWD a month.",
+          "facts": [
+            {
+              "v": "2,400",
+              "zh": "戶",
+              "en": "households"
+            },
+            {
+              "v": "3,200",
+              "zh": "元／月",
+              "en": "TWD/mo"
+            },
+            {
+              "v": "2",
+              "zh": "年可領",
+              "en": "years"
+            }
+          ],
+          "phase": 1,
+          "model": "house"
+        },
+        {
+          "id": "youth-3",
+          "zh": "實習媒合",
+          "en": "Internship matching",
+          "d": "六百個帶薪實習，媒合在地中小企業。",
+          "de": "600 paid internships matched with local SMEs.",
+          "facts": [
+            {
+              "v": "600",
+              "zh": "個實習",
+              "en": "internships"
+            },
+            {
+              "v": "28",
+              "zh": "k 月薪",
+              "en": "k salary"
+            },
+            {
+              "v": "120",
+              "zh": "家企業",
+              "en": "companies"
+            }
+          ],
+          "phase": 2,
+          "model": "coin"
+        },
+        {
+          "id": "youth-4",
+          "zh": "青年公民提案",
+          "en": "Youth civic proposals",
+          "d": "二十五案由青年提案、投票、執行。",
+          "de": "25 proposals pitched, voted and delivered by young residents.",
+          "facts": [
+            {
+              "v": "25",
+              "zh": "個提案",
+              "en": "proposals"
+            },
+            {
+              "v": "1,000",
+              "zh": "萬元執行",
+              "en": "k TWD"
+            },
+            {
+              "v": "16",
+              "zh": "歲可提案",
+              "en": "age to join"
+            }
+          ],
+          "phase": 3,
+          "model": "stage"
+        }
+      ]
+    },
+    {
+      "id": "digital",
+      "num": "09",
+      "zh": "數位",
+      "en": "Digital",
+      "icon": "📡",
+      "ground": "stripe",
+      "color": "#58a6a6",
+      "zhSum": "網路與說明書，一起送到家門口。",
+      "enSum": "Networks and instructions, delivered to the doorstep.",
+      "items": [
+        {
+          "id": "digital-1",
+          "zh": "社區數位教室",
+          "en": "Community digital rooms",
+          "d": "十八間教室提供免費電腦與志工教學。",
+          "de": "18 rooms with free computers and volunteer tutors.",
+          "facts": [
+            {
+              "v": "18",
+              "zh": "間教室",
+              "en": "rooms"
+            },
+            {
+              "v": "240",
+              "zh": "台電腦",
+              "en": "computers"
+            },
+            {
+              "v": "0",
+              "zh": "元使用",
+              "en": "free"
+            }
+          ],
+          "phase": 1,
+          "model": "classroom"
+        },
+        {
+          "id": "digital-2",
+          "zh": "免費 Wi-Fi 熱點",
+          "en": "Free Wi-Fi hotspots",
+          "d": "二百四十個熱點設在公園、市場與活動中心。",
+          "de": "240 hotspots in parks, markets and community centres.",
+          "facts": [
+            {
+              "v": "240",
+              "zh": "個熱點",
+              "en": "hotspots"
+            },
+            {
+              "v": "1",
+              "zh": "小時免費",
+              "en": "hr free"
+            },
+            {
+              "v": "98",
+              "zh": "% 可用率",
+              "en": "% uptime"
+            }
+          ],
+          "phase": 2,
+          "model": "tower"
+        },
+        {
+          "id": "digital-3",
+          "zh": "長輩手機課",
+          "en": "Phones for elders",
+          "d": "九十六梯次小班課，一位學員配一位志工。",
+          "de": "96 small classes, one volunteer per learner.",
+          "facts": [
+            {
+              "v": "96",
+              "zh": "梯次",
+              "en": "classes"
+            },
+            {
+              "v": "2,800",
+              "zh": "位學員",
+              "en": "learners"
+            },
+            {
+              "v": "1:1",
+              "zh": "志工配對",
+              "en": "volunteer"
+            }
+          ],
+          "phase": 2,
+          "model": "classroom"
+        },
+        {
+          "id": "digital-4",
+          "zh": "開放資料平台",
+          "en": "Open data portal",
+          "d": "五百二十組資料集，每月更新兩次。",
+          "de": "520 datasets, refreshed twice a month.",
+          "facts": [
+            {
+              "v": "520",
+              "zh": "資料集",
+              "en": "datasets"
+            },
+            {
+              "v": "2",
+              "zh": "次／月",
+              "en": "updates/mo"
+            },
+            {
+              "v": "100",
+              "zh": "% 免費",
+              "en": "free"
+            }
+          ],
+          "phase": 3,
+          "model": "globe"
+        }
+      ]
+    },
+    {
+      "id": "safety",
+      "num": "10",
+      "zh": "安全",
+      "en": "Safety",
+      "icon": "🛡️",
+      "ground": "brick",
+      "color": "#6f7fb5",
+      "zhSum": "早開四秒的綠燈，比標語更有用。",
+      "enSum": "Four extra seconds of green beats a slogan.",
+      "items": [
+        {
+          "id": "safety-1",
+          "zh": "路口行人早開",
+          "en": "Pedestrian head start",
+          "d": "三十六處路口行人綠燈提早四秒。",
+          "de": "Pedestrians get a four-second head start at 36 crossings.",
+          "facts": [
+            {
+              "v": "36",
+              "zh": "處路口",
+              "en": "crossings"
+            },
+            {
+              "v": "+4",
+              "zh": "秒綠燈",
+              "en": "s green"
+            },
+            {
+              "v": "-21",
+              "zh": "% 事故",
+              "en": "% crashes"
+            }
+          ],
+          "phase": 1,
+          "model": "crossing"
+        },
+        {
+          "id": "safety-2",
+          "zh": "治安熱點照明",
+          "en": "Hotspot lighting",
+          "d": "一百二十盞感應路燈補亮暗巷。",
+          "de": "120 sensor lights brighten dark lanes.",
+          "facts": [
+            {
+              "v": "120",
+              "zh": "盞路燈",
+              "en": "lights"
+            },
+            {
+              "v": "-46",
+              "zh": "% 通報",
+              "en": "% reports"
+            },
+            {
+              "v": "3",
+              "zh": "個月完成",
+              "en": "months"
+            }
+          ],
+          "phase": 1,
+          "model": "tower"
+        },
+        {
+          "id": "safety-3",
+          "zh": "防災避難地圖",
+          "en": "Evacuation maps",
+          "d": "七十八里更新避難地圖與集合點標示。",
+          "de": "78 neighbourhoods get updated shelter maps and signs.",
+          "facts": [
+            {
+              "v": "78",
+              "zh": "里",
+              "en": "districts"
+            },
+            {
+              "v": "1",
+              "zh": "張摺頁",
+              "en": "foldout"
+            },
+            {
+              "v": "6",
+              "zh": "種語言",
+              "en": "languages"
+            }
+          ],
+          "phase": 2,
+          "model": "house"
+        },
+        {
+          "id": "safety-4",
+          "zh": "社區防詐站",
+          "en": "Anti-fraud corners",
+          "d": "五十二處據點提供現場諮詢與通報協助。",
+          "de": "52 walk-in corners for advice and reporting help.",
+          "facts": [
+            {
+              "v": "52",
+              "zh": "處據點",
+              "en": "corners"
+            },
+            {
+              "v": "1,300",
+              "zh": "件諮詢",
+              "en": "cases"
+            },
+            {
+              "v": "0",
+              "zh": "元服務",
+              "en": "free"
+            }
+          ],
+          "phase": 3,
+          "model": "kiosk"
+        }
+      ]
+    },
+    {
+      "id": "env",
+      "num": "11",
+      "zh": "環保",
+      "en": "Environment",
+      "icon": "♻️",
+      "ground": "speckle",
+      "color": "#8db86f",
+      "zhSum": "垃圾變資源，杯子借了要還。",
+      "enSum": "Waste becomes material; cups come back.",
+      "items": [
+        {
+          "id": "env-1",
+          "zh": "資收站升級",
+          "en": "Recycling upgrades",
+          "d": "三十四處資收站加裝分類指引與雨遮。",
+          "de": "34 recycling points get sorting guides and rain cover.",
+          "facts": [
+            {
+              "v": "34",
+              "zh": "處站點",
+              "en": "sites"
+            },
+            {
+              "v": "+18",
+              "zh": "% 回收量",
+              "en": "% recycling"
+            },
+            {
+              "v": "2",
+              "zh": "年完成",
+              "en": "years"
+            }
+          ],
+          "phase": 1,
+          "model": "kiosk"
+        },
+        {
+          "id": "env-2",
+          "zh": "循環杯店家",
+          "en": "Reusable cup shops",
+          "d": "一百八十家飲料店加入借杯系統。",
+          "de": "180 drink shops join the cup-borrow scheme.",
+          "facts": [
+            {
+              "v": "180",
+              "zh": "家店家",
+              "en": "shops"
+            },
+            {
+              "v": "3",
+              "zh": "天內歸還",
+              "en": "days to return"
+            },
+            {
+              "v": "-26",
+              "zh": "% 一次性杯",
+              "en": "% cups"
+            }
+          ],
+          "phase": 2,
+          "model": "house"
+        },
+        {
+          "id": "env-3",
+          "zh": "社區廚餘堆肥",
+          "en": "Community composting",
+          "d": "十二處堆肥場供應社區農園用土。",
+          "de": "12 compost yards feed the community gardens.",
+          "facts": [
+            {
+              "v": "12",
+              "zh": "處堆肥場",
+              "en": "yards"
+            },
+            {
+              "v": "1.2",
+              "zh": "公噸／月",
+              "en": "t / month"
+            },
+            {
+              "v": "210",
+              "zh": "畦受惠",
+              "en": "plots fed"
+            }
+          ],
+          "phase": 2,
+          "model": "farm"
+        },
+        {
+          "id": "env-4",
+          "zh": "空品監測網",
+          "en": "Air quality network",
+          "d": "六十個監測點每五分鐘上傳資料。",
+          "de": "60 sensors upload readings every five minutes.",
+          "facts": [
+            {
+              "v": "60",
+              "zh": "個測點",
+              "en": "sensors"
+            },
+            {
+              "v": "5",
+              "zh": "分鐘更新",
+              "en": "min update"
+            },
+            {
+              "v": "24",
+              "zh": "小時公開",
+              "en": "hr public"
+            }
+          ],
+          "phase": 3,
+          "model": "tower"
+        }
+      ]
+    },
+    {
+      "id": "tourism",
+      "num": "12",
+      "zh": "觀光",
+      "en": "Tourism",
+      "icon": "🧳",
+      "ground": "brick",
+      "color": "#f2b5c6",
+      "zhSum": "沿著水岸走，連平日也有地方去。",
+      "enSum": "Walk the waterfront; there is somewhere to go on a weekday too.",
+      "items": [
+        {
+          "id": "tourism-1",
+          "zh": "舊港水岸步道",
+          "en": "Old harbour walk",
+          "d": "一點八公里步道串起倉庫群與渡口。",
+          "de": "A 1.8 km walk linking the warehouses and the ferry pier.",
+          "facts": [
+            {
+              "v": "1.8",
+              "zh": "公里",
+              "en": "km"
+            },
+            {
+              "v": "6",
+              "zh": "座平台",
+              "en": "decks"
+            },
+            {
+              "v": "24",
+              "zh": "小時開放",
+              "en": "hr open"
+            }
+          ],
+          "phase": 1,
+          "model": "river"
+        },
+        {
+          "id": "tourism-2",
+          "zh": "小旅行套票",
+          "en": "Micro-trip passes",
+          "d": "五條路線結合一張票，可搭公車與渡船。",
+          "de": "Five routes on one ticket covering bus and ferry.",
+          "facts": [
+            {
+              "v": "5",
+              "zh": "條路線",
+              "en": "routes"
+            },
+            {
+              "v": "150",
+              "zh": "元一日票",
+              "en": "TWD day pass"
+            },
+            {
+              "v": "12",
+              "zh": "個站點",
+              "en": "stops"
+            }
+          ],
+          "phase": 2,
+          "model": "bus"
+        },
+        {
+          "id": "tourism-3",
+          "zh": "夜間光環境",
+          "en": "Night light trail",
+          "d": "八處古蹟與橋梁打燈，晚上十點熄燈。",
+          "de": "Eight heritage sites and bridges lit until 22:00.",
+          "facts": [
+            {
+              "v": "8",
+              "zh": "處打燈",
+              "en": "sites"
+            },
+            {
+              "v": "22:00",
+              "zh": "熄燈",
+              "en": "lights off"
+            },
+            {
+              "v": "-30",
+              "zh": "% 光害",
+              "en": "% light spill"
+            }
+          ],
+          "phase": 2,
+          "model": "stage"
+        },
+        {
+          "id": "tourism-4",
+          "zh": "旅客服務站",
+          "en": "Visitor stations",
+          "d": "三處服務站提供行李寄放與旅遊諮詢。",
+          "de": "Three stations with luggage storage and travel advice.",
+          "facts": [
+            {
+              "v": "3",
+              "zh": "處服務站",
+              "en": "stations"
+            },
+            {
+              "v": "6",
+              "zh": "種語言",
+              "en": "languages"
+            },
+            {
+              "v": "8",
+              "zh": "小時／日",
+              "en": "hr/day"
+            }
+          ],
+          "phase": 3,
+          "model": "kiosk"
+        }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "f1",
+      "from": "transit",
+      "to": "education",
+      "cargo": "書本",
+      "cargoEn": "books",
+      "walker": "student",
+      "evidence": "official"
+    },
+    {
+      "id": "f2",
+      "from": "childcare",
+      "to": "care",
+      "cargo": "餐盒",
+      "cargoEn": "meal boxes",
+      "walker": "parent",
+      "evidence": "official"
+    },
+    {
+      "id": "f3",
+      "from": "green",
+      "to": "sports",
+      "cargo": "樹苗",
+      "cargoEn": "seedlings",
+      "walker": "farmer",
+      "evidence": "thematic"
+    },
+    {
+      "id": "f4",
+      "from": "digital",
+      "to": "youth",
+      "cargo": "筆電",
+      "cargoEn": "laptops",
+      "walker": "researcher",
+      "evidence": "official"
+    },
+    {
+      "id": "f5",
+      "from": "culture",
+      "to": "tourism",
+      "cargo": "導覽手冊",
+      "cargoEn": "guidebooks",
+      "walker": "traveler",
+      "evidence": "thematic"
+    },
+    {
+      "id": "f6",
+      "from": "env",
+      "to": "safety",
+      "cargo": "監測儀",
+      "cargoEn": "sensors",
+      "walker": "worker",
+      "evidence": "pending"
+    },
+    {
+      "id": "f7",
+      "from": "education",
+      "to": "digital",
+      "cargo": "平板",
+      "cargoEn": "tablets",
+      "walker": "student",
+      "evidence": "thematic"
+    },
+    {
+      "id": "f8",
+      "from": "care",
+      "to": "transit",
+      "cargo": "藥箱",
+      "cargoEn": "medicine",
+      "walker": "elder",
+      "evidence": "pending"
+    }
+  ],
+  "dayCycle": [
+    {
+      "at": 360,
+      "zh": "清晨",
+      "en": "Dawn",
+      "items": [
+        "transit-1",
+        "green-2",
+        "care-1",
+        "sports-4",
+        "env-3",
+        "tourism-1"
+      ]
+    },
+    {
+      "at": 540,
+      "zh": "上午",
+      "en": "Morning",
+      "items": [
+        "education-1",
+        "digital-1",
+        "childcare-1",
+        "transit-2",
+        "culture-3",
+        "safety-1",
+        "green-1"
+      ]
+    },
+    {
+      "at": 720,
+      "zh": "正午",
+      "en": "Noon",
+      "items": [
+        "transit-1",
+        "childcare-2",
+        "sports-3",
+        "tourism-2",
+        "env-2",
+        "youth-2",
+        "care-3"
+      ]
+    },
+    {
+      "at": 1020,
+      "zh": "黃昏",
+      "en": "Dusk",
+      "items": [
+        "transit-4",
+        "sports-1",
+        "culture-2",
+        "tourism-3",
+        "youth-4",
+        "digital-2",
+        "green-3"
+      ]
+    },
+    {
+      "at": 1140,
+      "zh": "夜晚",
+      "en": "Night",
+      "items": [
+        "care-2",
+        "safety-2",
+        "culture-4",
+        "transit-4",
+        "env-4",
+        "digital-3",
+        "tourism-3"
+      ]
+    },
+    {
+      "at": 1320,
+      "zh": "深夜",
+      "en": "Late",
+      "items": [
+        "childcare-2",
+        "care-3",
+        "safety-4",
+        "digital-4",
+        "env-1",
+        "youth-3"
+      ]
+    }
+  ]
+};
+/* ---------- deterministic random ---------- */
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const rnd = mulberry32(20261031);
+const noise = new SimplexNoise({ random: mulberry32(77007) });
+const rand = (a=0,b=1)=> a + (b-a)*rnd();
+const pick = arr => arr[Math.floor(rnd()*arr.length)];
+const clamp = (v,a,b)=> Math.max(a,Math.min(b,v));
+const isMobile = ()=> matchMedia('(max-width:800px)').matches;
+const lerp = (a,b,t)=> a+(b-a)*t;
+const smoothstep = (a,b,x)=>{ const t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
+
+/* ---------- language ---------- */
+const LANG = new URLSearchParams(location.search).get('lang')==='en' ? 'en' : 'zh';
+const t = (zh,en)=> LANG==='en'?en:zh;
+function applyStaticLang(){
+  document.querySelectorAll('[data-en]').forEach(el=>{
+    if(!el.dataset.zh) el.dataset.zh = el.textContent;
+    el.textContent = LANG==='en' ? el.dataset.en : el.dataset.zh;
+  });
+  document.querySelectorAll('[data-en-ph]').forEach(el=>{
+    if(!el.dataset.zhPh) el.dataset.zhPh = el.placeholder;
+    el.placeholder = LANG==='en' ? el.dataset.enPh : el.dataset.zhPh;
+  });
+  document.querySelectorAll('[data-en-title]').forEach(el=>{
+    if(!el.dataset.zhTitle) el.dataset.zhTitle = el.title;
+    el.title = LANG==='en' ? el.dataset.enTitle : el.dataset.zhTitle;
+  });
+  document.documentElement.lang = LANG==='en'?'en':'zh-Hant';
+}
+
+/* ---------- design tokens ---------- */
+const C = {
+  coral:'#db6a41', ink:'#211d1d', cream:'#fff8f4', yellow:'#fcea8b', stone:'#c5b5a7', green:'#71806a',
+  glass:'#86a8a6', wood:'#b48560', teal:'#3e7c8c',
+  leaf1:'#9cc27a', leaf2:'#8db86f', leaf3:'#728f5f',
+  pink:'#f2b5c6', teal2:'#58a6a6', blue:'#6f7fb5', white:'#fff8f4',
+  soil:'#9a7a5c', road:'#6d6862', water:'#7fb6c4', sand:'#e3cfa8', roofDark:'#a34e34'
+};
+const COL = {
+  coral:new THREE.Color('#db6a41'), yellow:new THREE.Color('#fcea8b'), ink:new THREE.Color('#211d1d'),
+  white:new THREE.Color('#fff8f4'), sky:new THREE.Color('#f4eee3')
+};
+const TOP = 0.65, WATER_Y = -0.18, R = 2.02, SPACING = 2.28, WALK_R = 1.8, ISLAND_Y = 0;
+
+/* ---------- layout table (axial, irregular blob) ---------- */
+const AXIAL = [
+  [0,0],[1,0],[2,-1],[1,1],[0,1],[-1,1],[-1,2],[0,2],[-1,0],[1,-1],[2,0],[0,-1]
+];
+function axialToWorld(q,r){ return { x: Math.sqrt(3)*SPACING*(q + r/2), z: 1.5*SPACING*r }; }
+
+/* ---------- three app state ---------- */
+const state = {
+  timeMin: 600, paused:false, reduced:false, bird:false,
+  selected:null, hover:null, tab:'themes', search:'',
+  toggles:{ names:false, cargo:true, flows:false, journal:true },
+  journalFilter:null, flying:null, ready:false, animTime:0
+};
+let scene, camera, renderer, labelRenderer, controls, sun, hemi, fill, skyMat, waterMat, seaMesh;
+let islands = [], themeById = new Map(), itemById = new Map(), itemWorld = new Map(), flowById = new Map();
+let kitEntries = [], smallEntries = [], kitMeshes = [], smallMeshes = [], pickables = [];
+let flows = [], walkers = [], walkerPick = null, graph = null;
+let selectedParts = new Set(), litParts = new Set();
+let needsRender = true, lastFrame = 0, frameNo = 0;
+let thumbRenderer = null, thumbScene = null, thumbCam = null, thumbMats = new Map();
+const clockObj = new THREE.Clock();
+const dummy = new THREE.Object3D();
+const UP = new THREE.Vector3(0,1,0);
+const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), tmpQ = new THREE.Quaternion();
+
+function markDirty(){ needsRender = true; }
+function fmtTime(min){
+  const m = ((min%1440)+1440)%1440;
+  return String(Math.floor(m/60)).padStart(2,'0')+':'+String(Math.floor(m%60)).padStart(2,'0');
+}
+/* =========================================================
+   SCENE
+   ========================================================= */
+const DAY_KEYS = [
+  { m:0,    top:'1e2c58', hor:'3f4f80', sun:'b4c2ff', sunI:1.15, hs:'94a2d8', hg:'64566a', hi:1.85, night:1,    water:'5a88b2' },
+  { m:300,  top:'26365f', hor:'4c5688', sun:'b8c4ff', sunI:1.0,  hs:'96a4da', hg:'66586c', hi:1.85, night:1,    water:'5c8ab4' },
+  { m:360,  top:'7f8fc4', hor:'f6c3a6', sun:'ffb48a', sunI:1.3,  hs:'f3c6b5', hg:'6b5a5a', hi:1.1,  night:.55,  water:'8fb7c4' },
+  { m:450,  top:'a9d1ea', hor:'fbe6d3', sun:'ffe2c4', sunI:2.4,  hs:'eaf2f6', hg:'8a7a68', hi:1.25, night:0,    water:'9fcfd6' },
+  { m:720,  top:'9fd0ec', hor:'f4eee3', sun:'fff1de', sunI:2.9,  hs:'eef6fa', hg:'8f8270', hi:1.35, night:0,    water:'a9d8db' },
+  { m:960,  top:'a6cfe6', hor:'f8e7d2', sun:'ffe3c0', sunI:2.5,  hs:'f1efe8', hg:'8a7a66', hi:1.25, night:0,    water:'9fcbd2' },
+  { m:1065, top:'8b8fc4', hor:'f7b98f', sun:'ff9f6a', sunI:1.8,  hs:'f6d2bc', hg:'7d6660', hi:1.2,  night:.3,   water:'93a9bd' },
+  { m:1140, top:'5a5e9e', hor:'d99aa6', sun:'ff9a7a', sunI:1.3,  hs:'c0b2e0', hg:'655868', hi:1.35, night:.75,  water:'6a7cab' },
+  { m:1260, top:'22325f', hor:'445488', sun:'c0ccff', sunI:1.2,  hs:'98a8dc', hg:'685a6e', hi:1.9,  night:1,    water:'5a88b2' },
+  { m:1440, top:'1e2c58', hor:'3f4f80', sun:'b4c2ff', sunI:1.15, hs:'94a2d8', hg:'64566a', hi:1.85, night:1,    water:'5a88b2' }
+];
+const dayColors = DAY_KEYS.map(k=>({
+  m:k.m, top:new THREE.Color('#'+k.top), hor:new THREE.Color('#'+k.hor), sun:new THREE.Color('#'+k.sun),
+  sunI:k.sunI, hs:new THREE.Color('#'+k.hs), hg:new THREE.Color('#'+k.hg), hi:k.hi, night:k.night, water:new THREE.Color('#'+k.water)
+}));
+const skyNow = { top:new THREE.Color(), hor:new THREE.Color(), sun:new THREE.Color(), sunI:2.9, hs:new THREE.Color(), hg:new THREE.Color(), hi:1.3, night:0, water:new THREE.Color(), dir:new THREE.Vector3() };
+
+function sampleDay(min){
+  const m = ((min%1440)+1440)%1440;
+  let a = dayColors[0], b = dayColors[1];
+  for(let i=0;i<dayColors.length-1;i++){
+    if(m >= dayColors[i].m && m <= dayColors[i+1].m){ a = dayColors[i]; b = dayColors[i+1]; break; }
+  }
+  const f = b.m===a.m ? 0 : (m-a.m)/(b.m-a.m);
+  skyNow.top.copy(a.top).lerp(b.top,f);
+  skyNow.hor.copy(a.hor).lerp(b.hor,f);
+  skyNow.sun.copy(a.sun).lerp(b.sun,f);
+  skyNow.sunI = lerp(a.sunI,b.sunI,f);
+  skyNow.hs.copy(a.hs).lerp(b.hs,f);
+  skyNow.hg.copy(a.hg).lerp(b.hg,f);
+  skyNow.hi = lerp(a.hi,b.hi,f);
+  skyNow.night = lerp(a.night,b.night,f);
+  skyNow.water.copy(a.water).lerp(b.water,f);
+}
+
+function currentDaySlot(){
+  const m = ((state.timeMin%1440)+1440)%1440;
+  const d = DATA.dayCycle;
+  let cur = d[d.length-1];
+  for(let i=0;i<d.length;i++){ if(m >= d[i].at) cur = d[i]; }
+  if(m < d[0].at) cur = d[d.length-1];
+  return cur;
+}
+
+function initRenderer(){
+  scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0xf4eee3, 42, 150);
+  camera = new THREE.PerspectiveCamera(32, innerWidth/innerHeight, .3, 320);
+  camera.position.set(6.8, 9.5, 25);
+
+  renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, powerPreference:'high-performance' });
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, isMobile()?1.4:1.75));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1;
+  renderer.setClearColor(0x000000, 0);
+  document.getElementById('stage').appendChild(renderer.domElement);
+
+  labelRenderer = new CSS2DRenderer({ element: document.getElementById('labels') });
+  labelRenderer.setSize(innerWidth, innerHeight);
+
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = .07;
+  controls.enablePan = false;
+  controls.minPolarAngle = THREE.MathUtils.degToRad(25);
+  controls.maxPolarAngle = THREE.MathUtils.degToRad(70);
+  controls.minDistance = 3;
+  controls.maxDistance = 70;
+  controls.target.set(0, .6, 0);
+  controls.addEventListener('change', markDirty);
+  controls.addEventListener('start', ()=>{ state.flying = null; });
+  renderer.domElement.addEventListener('pointerdown', ()=>{ state.flying = null; }, {passive:true});
+}
+
+/* ---------- sky ---------- */
+function buildSky(){
+  skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite:false, fog:false,
+    uniforms:{
+      uTop:{value:new THREE.Color('#9fd0ec')}, uHorizon:{value:new THREE.Color('#f4eee3')},
+      uSunDir:{value:new THREE.Vector3(0,1,0)}, uSun:{value:new THREE.Color('#fff1de')}, uNight:{value:0}
+    },
+    vertexShader:`varying vec3 vDir; void main(){ vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader:`
+      uniform vec3 uTop, uHorizon, uSun, uSunDir; uniform float uNight; varying vec3 vDir;
+      float hash(vec3 p){ p = fract(p*0.3183099 + vec3(0.1,0.2,0.3)); p *= 17.0; return fract(p.x*p.y*p.z*(p.x+p.y+p.z)); }
+      void main(){
+        vec3 d = normalize(vDir);
+        float h = smoothstep(-0.02, 0.55, d.y);
+        vec3 col = mix(uHorizon, uTop, h);
+        float sd = max(dot(d, normalize(uSunDir)), 0.0);
+        col += uSun * pow(sd, 18.0) * 0.35;
+        col += uSun * pow(sd, 220.0) * 0.45;
+        if(uNight > 0.01){
+          vec3 g = floor(d*180.0);
+          float s = hash(g);
+          float tw = step(0.9965, s);
+          float above = smoothstep(0.0, 0.32, d.y);
+          col += vec3(0.88,0.94,1.0) * tw * above * uNight * (0.55 + 0.45*sin(s*90.0));
+        }
+        gl_FragColor = vec4(col, 1.0);
+      }`
+  });
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(170, 32, 20), skyMat);
+  sky.frustumCulled = false;
+  scene.add(sky);
+}
+
+/* ---------- sea + island walls ---------- */
+const WATER_VERT = `
+  varying vec3 vWorld;
+  #include <fog_pars_vertex>
+  void main(){
+    vec4 wp = modelMatrix * vec4(position,1.0);
+    vWorld = wp.xyz;
+    vec4 mvPosition = viewMatrix * wp;
+    gl_Position = projectionMatrix * mvPosition;
+    #include <fog_vertex>
+  }`;
+const WATER_FRAG = `
+  uniform float uTime; uniform vec3 uShallow, uDeep; uniform float uNight;
+  varying vec3 vWorld;
+  #include <fog_pars_fragment>
+  void main(){
+    vec2 p = vWorld.xz;
+    float w = sin(p.x*0.62 + uTime*0.36)*0.5 + sin(p.y*0.47 - uTime*0.28)*0.5 + sin((p.x+p.y)*0.23 + uTime*0.19);
+    float d = length(p*vec2(0.9,1.1));
+    float depth = smoothstep(9.0, 74.0, d);
+    vec3 col = mix(uShallow, uDeep, clamp(depth + w*0.07, 0.0, 1.0));
+    float sp = pow(max(0.0, sin(p.x*9.1 + uTime*1.7) * sin(p.y*8.3 - uTime*1.3)), 46.0);
+    float hj = fract(sin(dot(floor(p*3.1), vec2(12.9898,78.233))) * 43758.5453);
+    sp *= step(0.985, hj) * 0.8;
+    col += sp * 0.45 * (1.0 - uNight*0.8);
+    float shore = smoothstep(13.0, 5.0, d) * (0.5 + 0.5*sin(d*4.0 - uTime*0.9));
+    col = mix(col, vec3(0.88,0.97,0.97), shore*0.12);
+    gl_FragColor = vec4(col, 1.0);
+    #include <fog_fragment>
+  }`;
+function waterMaterial(){
+  return new THREE.ShaderMaterial({
+    fog:true,
+    uniforms: THREE.UniformsUtils.merge([ THREE.UniformsLib.fog, {
+      uTime:{value:0}, uShallow:{value:new THREE.Color('#a4d4da')}, uDeep:{value:new THREE.Color('#6fa9b8')}, uNight:{value:0}
+    }]),
+    vertexShader: WATER_VERT, fragmentShader: WATER_FRAG
+  });
+}
+function buildWater(){
+  waterMat = waterMaterial();
+  const geo = new THREE.CircleGeometry(160, 64).rotateX(-Math.PI/2);
+  seaMesh = new THREE.Mesh(geo, waterMat);
+  seaMesh.position.y = WATER_Y;
+  seaMesh.receiveShadow = false;
+  scene.add(seaMesh);
+}
+
+/* ---------- lights ---------- */
+function buildLights(){
+  hemi = new THREE.HemisphereLight(0xeef6fa, 0x8f8270, 1.3);
+  scene.add(hemi);
+  sun = new THREE.DirectionalLight(0xfff1de, 2.8);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -20; sun.shadow.camera.right = 20;
+  sun.shadow.camera.top = 22; sun.shadow.camera.bottom = -22;
+  sun.shadow.camera.near = 1; sun.shadow.camera.far = 90;
+  sun.shadow.bias = -0.0006;
+  sun.shadow.normalBias = 0.045;
+  sun.shadow.radius = 3;
+  sun.target.position.set(0, .4, 0);
+  scene.add(sun, sun.target);
+  fill = new THREE.DirectionalLight(0xbfd6ff, .35);
+  fill.position.set(-14, 10, -8);
+  scene.add(fill);
+}
+/* =========================================================
+   BACKDROP — basin, forest, distant ridges, clouds
+   ========================================================= */
+function fbm(x,z,oct=4){
+  let v=0, amp=.5, f=1;
+  for(let i=0;i<oct;i++){ v += noise.noise3d(x*f, 0.31*i, z*f)*amp; amp*=.5; f*=2.03; }
+  return v;
+}
+function terrainHeight(x,z){
+  const r = Math.hypot(x,z);
+  const ring = smoothstep(24, 50, r) * (1 - smoothstep(64, 84, r));
+  let h = -3.4 + ring*13.0;
+  const zs = smoothstep(0, 30, z);
+  h -= zs * ring * 4.2;
+  h += fbm(x*0.035, z*0.035, 4) * 3.1 * ring;
+  h += fbm(x*0.11, z*0.11, 2) * 0.8 * ring;
+  const q = Math.round(h*1.35)/1.35;
+  h = lerp(h, q, 0.42);
+  return h;
+}
+const TERRAIN_COLORS = [
+  [ -2.0, new THREE.Color('#8fb3ad') ],
+  [  0.35,new THREE.Color('#d9c9a3') ],
+  [  1.6, new THREE.Color('#aec493') ],
+  [  3.4, new THREE.Color('#a3b986') ],
+  [  6.0, new THREE.Color('#6f8a62') ],
+  [  9.5, new THREE.Color('#b2a38d') ]
+];
+function terrainColor(h, out){
+  if(h <= TERRAIN_COLORS[0][0]) return out.copy(TERRAIN_COLORS[0][1]);
+  for(let i=0;i<TERRAIN_COLORS.length-1;i++){
+    const a=TERRAIN_COLORS[i], b=TERRAIN_COLORS[i+1];
+    if(h>=a[0] && h<=b[0]){ const f=(h-a[0])/(b[0]-a[0]); return out.copy(a[1]).lerp(b[1], f); }
+  }
+  return out.copy(TERRAIN_COLORS[TERRAIN_COLORS.length-1][1]);
+}
+function buildTerrain(){
+  const seg = isMobile()? 96 : 160;
+  const geo = new THREE.PlaneGeometry(170,170,seg,seg).rotateX(-Math.PI/2);
+  const pos = geo.attributes.position;
+  const cols = new Float32Array(pos.count*3);
+  const c = new THREE.Color();
+  for(let i=0;i<pos.count;i++){
+    const x = pos.getX(i), z = pos.getZ(i);
+    const h = terrainHeight(x,z);
+    pos.setY(i,h);
+    terrainColor(h,c);
+    const j = 0.94 + (noise.noise3d(x*0.6, 3.1, z*0.6)*0.5+0.5)*0.12;
+    cols[i*3]=c.r*j; cols[i*3+1]=c.g*j; cols[i*3+2]=c.b*j;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(cols,3));
+  geo.computeVertexNormals();
+  const mat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:1, metalness:0, flatShading:true });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = 0;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+}
+
+function buildBackgroundTrees(){
+  const safeMerge = list => BufferGeometryUtils.mergeGeometries(list.map(g=> g.index ? g.toNonIndexed() : g), false);
+  const conifer = safeMerge([
+    new THREE.ConeGeometry(.42,.9,6).translate(0,.65,0),
+    new THREE.ConeGeometry(.32,.7,6).translate(0,1.05,0),
+    new THREE.ConeGeometry(.2,.55,6).translate(0,1.4,0),
+    new THREE.CylinderGeometry(.06,.08,.35,5).translate(0,.18,0)
+  ]);
+  const broadGeos = [];
+  for(let i=0;i<4;i++){
+    const g = new THREE.IcosahedronGeometry(.36 + i*0.03, 0);
+    g.scale(1, .82, 1);
+    g.translate((rnd()-.5)*.34, .85 + rnd()*.42, (rnd()-.5)*.34);
+    broadGeos.push(g);
+  }
+  broadGeos.push(new THREE.CylinderGeometry(.07,.1,.7,5).translate(0,.35,0));
+  const broad = safeMerge(broadGeos);
+
+  const count = isMobile()? 620 : 2100;
+  const specs = [
+    { geo:conifer, color:new THREE.Color('#5f7d5c'), n:Math.floor(count*0.55) },
+    { geo:broad, color:new THREE.Color('#7f9c6b'), n:Math.floor(count*0.45) }
+  ];
+  specs.forEach(sp=>{
+    const mat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:.95, metalness:0, flatShading:true });
+    const im = new THREE.InstancedMesh(sp.geo, mat, sp.n);
+    im.castShadow = false; im.receiveShadow = false;
+    const c = new THREE.Color();
+    let placed = 0, guard = 0;
+    while(placed < sp.n && guard < sp.n*14){
+      guard++;
+      const a = rnd()*Math.PI*2;
+      const rad = 26 + rnd()*30;
+      const x = Math.cos(a)*rad, z = Math.sin(a)*rad;
+      const y = terrainHeight(x,z);
+      if(y < 0.6) continue;
+      if(Math.hypot(x,z) < 25) continue;
+      const s = 0.55 + rnd()*1.1;
+      dummy.position.set(x, y-0.15, z);
+      dummy.rotation.set(0, rnd()*6.28, 0);
+      dummy.scale.setScalar(s);
+      dummy.updateMatrix();
+      im.setMatrixAt(placed, dummy.matrix);
+      c.copy(sp.color).offsetHSL((rnd()-.5)*.03, (rnd()-.5)*.12, (rnd()-.5)*.12);
+      im.setColorAt(placed, c);
+      placed++;
+    }
+    im.count = placed;
+    im.instanceMatrix.needsUpdate = true;
+    if(im.instanceColor) im.instanceColor.needsUpdate = true;
+    scene.add(im);
+  });
+}
+
+function buildRidges(){
+  const makeRing = (radius, minH, maxH, baseColor, opacity)=>{
+    const N = 120;
+    const pos = [], idx = [];
+    for(let i=0;i<=N;i++){
+      const a = i/N*Math.PI*2;
+      const h = minH + (Math.sin(a*3.0+radius)*.5+.5)* (maxH-minH)*.55 + (noise.noise3d(Math.cos(a)*2.1, radius*.1, Math.sin(a)*2.1)*.5+.5)*(maxH-minH)*.65;
+      const x = Math.cos(a)*radius, z = Math.sin(a)*radius;
+      pos.push(x,-6,z, x,h,z);
+      if(i<N){ const b=i*2; idx.push(b,b+1,b+2, b+1,b+3,b+2); }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos,3));
+    g.setIndex(idx);
+    g.computeVertexNormals();
+    const c = baseColor.clone().lerp(skyNow.hor, opacity);
+    const m = new THREE.MeshBasicMaterial({ color:c, side:THREE.DoubleSide, fog:true, transparent:true, opacity:.92, depthWrite:true });
+    const mesh = new THREE.Mesh(g,m);
+    mesh.userData.ridgeColor = baseColor;
+    mesh.userData.ridgeMix = opacity;
+    scene.add(mesh);
+    return mesh;
+  };
+  skyNow.hor.set('#f4eee3');
+  buildRidges.list = [
+    makeRing(64, 1.2, 4.2, new THREE.Color('#8f9c93'), .35),
+    makeRing(94, 2.2, 7.5, new THREE.Color('#7f8d8c'), .55),
+    makeRing(126, 3.5, 11, new THREE.Color('#77828c'), .72)
+  ];
+}
+
+let cloudGroup = [];
+function buildClouds(){
+  const mat = new THREE.MeshStandardMaterial({ color:0xfffaf3, roughness:1, metalness:0, flatShading:true });
+  for(let i=0;i<12;i++){
+    const g = new THREE.Group();
+    const puffs = 3 + Math.floor(rnd()*4);
+    const geos = [];
+    for(let j=0;j<puffs;j++){
+      const geo = new THREE.IcosahedronGeometry(1, 1);
+      geo.scale(.8 + rnd()*1.1, .8 + rnd()*1.1, .8 + rnd()*1.1);
+      geo.translate((rnd()-.5)*3.2, (rnd()-.5)*.6, (rnd()-.5)*1.6);
+      geos.push(geo);
+    }
+    const merged = BufferGeometryUtils.mergeGeometries(geos, false);
+    const m = new THREE.Mesh(merged, mat);
+    g.add(m);
+    const a = rnd()*Math.PI*2, rad = 24 + rnd()*40;
+    g.position.set(Math.cos(a)*rad, 17 + rnd()*13, Math.sin(a)*rad);
+    g.scale.setScalar(1 + rnd()*1.2);
+    g.userData.speed = 0.28 + rnd()*0.5;
+    g.userData.startX = g.position.x;
+    scene.add(g);
+    cloudGroup.push(g);
+  }
+}
+
+function buildSeaProps(){
+  const matSolid = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:.8, metalness:0, flatShading:true });
+  const add = (geo, color, p, s=1, ry=0)=>{
+    const m = new THREE.Mesh(geo, matSolid.clone());
+    m.material.color.set(color);
+    m.position.copy(p); m.scale.setScalar(s); m.rotation.y = ry;
+    m.castShadow = false; m.receiveShadow = false;
+    scene.add(m); return m;
+  };
+  // tiny islets
+  for(let i=0;i<5;i++){
+    const a = 2.1 + i*1.23, rad = 17 + i*4.4;
+    const p = new THREE.Vector3(Math.cos(a)*rad, WATER_Y, Math.sin(a)*rad);
+    add(new THREE.ConeGeometry(1.3, .7, 5), '#c9bda4', p, 1 + rnd()*.6, rnd()*3);
+    add(new THREE.ConeGeometry(.22,.8,5), '#6f8a62', p.clone().add(new THREE.Vector3(.2,.65,0)), 1.1);
+    add(new THREE.ConeGeometry(.18,.6,5), '#7f9c6b', p.clone().add(new THREE.Vector3(-.45,.55,.2)), .9);
+  }
+  // lighthouse
+  const lp = new THREE.Vector3(-25, WATER_Y, 16);
+  add(new THREE.CylinderGeometry(1.6,2.1,.7,7), '#d9c9a3', lp, 1);
+  add(new THREE.CylinderGeometry(.36,.5,3.4,10), '#fff8f4', lp.clone().add(new THREE.Vector3(0,2.0,0)), 1);
+  add(new THREE.CylinderGeometry(.52,.52,.28,10), '#db6a41', lp.clone().add(new THREE.Vector3(0,2.9,0)), 1);
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(.3,10,8), new THREE.MeshStandardMaterial({ color:0xfff2cf, emissive:0xffc777, emissiveIntensity:1.2, roughness:.5 }));
+  lamp.position.copy(lp).add(new THREE.Vector3(0,3.4,0));
+  scene.add(lamp);
+  add(new THREE.ConeGeometry(.6,.5,8), '#a34e34', lp.clone().add(new THREE.Vector3(0,3.8,0)), 1);
+  // sailboats
+  for(let i=0;i<4;i++){
+    const a = 0.7 + i*1.4, rad = 16 + i*5;
+    const p = new THREE.Vector3(Math.cos(a)*rad, WATER_Y+.1, Math.sin(a)*rad);
+    add(new THREE.BoxGeometry(1.5,.4,.55), '#b48560', p, 1, a+1);
+    add(new THREE.CylinderGeometry(.04,.04,2.4,6), '#c5b5a7', p.clone().add(new THREE.Vector3(0,1.4,0)), 1);
+    const sail = new THREE.Mesh(new THREE.ConeGeometry(.75,2.1,3), new THREE.MeshStandardMaterial({ color:0xfff8f4, roughness:.9, side:THREE.DoubleSide }));
+    sail.position.copy(p).add(new THREE.Vector3(0,1.6,0));
+    sail.rotation.z = Math.PI/2; sail.rotation.y = a+1;
+    scene.add(sail);
+  }
+}
+/* =========================================================
+   KIT — instanced clay parts
+   ========================================================= */
+const GEO = {
+  box: new THREE.BoxGeometry(1,1,1),
+  rbox: new RoundedBoxGeometry(1,1,1,2,0.12),
+  cylinder: new THREE.CylinderGeometry(.5,.5,1,14),
+  cone: new THREE.ConeGeometry(.5,1,14),
+  sphere: new THREE.SphereGeometry(.5,16,12),
+  ico: new THREE.IcosahedronGeometry(.5,1),
+  dome: new THREE.SphereGeometry(.5,14,8,0,Math.PI*2,0,Math.PI/2),
+  torus: new THREE.TorusGeometry(.5,.14,8,16),
+  prism: new THREE.CylinderGeometry(.5,.5,1,3),
+  hip: new THREE.ConeGeometry(.5,1,4),
+  glowbox: new THREE.BoxGeometry(1,1,1),
+  glowsphere: new THREE.SphereGeometry(.5,12,10)
+};
+GEO.hip.rotateY(Math.PI/4);
+
+const matSolid = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:.78, metalness:0 });
+const matGlow = new THREE.MeshStandardMaterial({ color:0xfff3e0, emissive:new THREE.Color('#ffc777'), emissiveIntensity:1, roughness:.55, metalness:0 });
+
+function eulerMatrix(pos, scl, rot){
+  dummy.position.set(pos[0],pos[1],pos[2]);
+  dummy.rotation.set(rot?rot[0]:0, rot?rot[1]:0, rot?rot[2]:0);
+  dummy.scale.set(scl[0],scl[1],scl[2]);
+  dummy.updateMatrix();
+  return dummy.matrix.clone();
+}
+function pushPart(list, kind, pos, scl, color, rot, itemId){
+  const m = eulerMatrix(pos, scl, rot);
+  m.scale(new THREE.Vector3(1+ (rnd()-.5)*0.014, 1+ (rnd()-.5)*0.014, 1+ (rnd()-.5)*0.014));
+  list.push({ kind, matrix:m, color:new THREE.Color(color), itemId:itemId||null });
+}
+
+function makeKitMeshes(entries, isSmall){
+  const byKind = new Map();
+  entries.forEach((e,i)=>{ if(!byKind.has(e.kind)) byKind.set(e.kind, []); byKind.get(e.kind).push({...e, order:i}); });
+  const meshes = [];
+  byKind.forEach((list, kind)=>{
+    const geo = GEO[kind] || GEO.box;
+    const glow = kind.indexOf('glow')===0;
+    const mat = glow ? matGlow : matSolid;
+    const im = new THREE.InstancedMesh(geo, mat, list.length);
+    im.castShadow = !isSmall;
+    im.receiveShadow = false;
+    const ids = [];
+    const bases = [];
+    list.forEach((e,i)=>{
+      im.setMatrixAt(i, e.matrix);
+      im.setColorAt(i, e.color);
+      ids.push(e.itemId);
+      bases.push(e.color.clone());
+    });
+    im.instanceMatrix.needsUpdate = true;
+    if(im.instanceColor) im.instanceColor.needsUpdate = true;
+    im.userData.itemIds = ids;
+    im.userData.baseColors = bases;
+    im.userData.isSmall = !!isSmall;
+    im.frustumCulled = false;
+    scene.add(im);
+    meshes.push(im);
+  });
+  return meshes;
+}
+
+/* ---------- clay model builders (unit space: base ±0.5, height 0–1.5) ---------- */
+const MODELS = {
+  house(P){
+    P('box',[0,.34,0],[.92,.62,.82],C.cream);
+    P('hip',[0,.72,0],[1.08,.34,1.0],C.coral);
+    P('box',[0,.36,.44],[.22,.34,.03],C.roofDark);
+    P('glowbox',[-.27,.42,.42],[.2,.17,.03],'#cfe6e2');
+    P('glowbox',[.27,.42,.42],[.2,.17,.03],'#cfe6e2');
+    P('box',[.28,.9,-.1],[.09,.2,.09],C.stone);
+  },
+  hall(P, accent){
+    P('box',[0,.18,0],[1.06,.36,.9],C.cream);
+    [-.32,0,.32].forEach(x=>P('cylinder',[x,.4,.28],[.09,.42,.09],C.white));
+    P('box',[0,.63,0],[1.12,.1,.96],C.teal);
+    P('hip',[0,.8,0],[1.16,.32,1.02],accent||C.coral);
+    P('box',[0,.97,-.16],[.32,.32,.32],C.cream);
+    P('hip',[0,1.18,-.16],[.44,.22,.44],C.teal);
+    P('glowbox',[0,.99,.02],[.17,.17,.04],'#ffe3b0');
+    P('box',[0,.1,.36],[.62,.04,.08],C.stone);
+  },
+  kiosk(P){
+    P('box',[0,.12,0],[1.02,.16,.82],C.wood);
+    [-.4,.4].forEach(x=>[-.3,.3].forEach(z=>P('cylinder',[x,.4,z],[.06,.58,.06],C.cream)));
+    P('hip',[0,.74,0],[1.12,.26,.92],C.yellow);
+    P('box',[0,.24,.36],[.92,.28,.06],C.coral);
+    P('glowbox',[-.22,.3,.3],[.16,.12,.06],'#ffd9a0');
+    P('box',[.24,.3,.3],[.24,.12,.06],'#cfe6e2');
+  },
+  classroom(P){
+    P('box',[0,.05,0],[1.16,.1,.98],C.white);
+    P('box',[0,.38,-.43],[1.06,.46,.05],'#3d4a44');
+    P('box',[0,.34,-.4],[.98,.3,.02],'#2f3a36');
+    for(let i=0;i<3;i++){
+      const x = -.32 + i*.32;
+      P('box',[x,.16,.2],[.24,.05,.18],C.wood);
+      P('box',[x,.09,.2],[.04,.16,.04],C.wood);
+      P('box',[x,.2,.31],[.2,.18,.04],C.teal);
+    }
+    P('cylinder',[.4,.28,-.18],[.08,.26,.08],C.coral);
+    P('sphere',[.4,.47,-.18],[.14,.14,.14],'#f0c9a8');
+    P('cylinder',[-.18,.27,.02],[.07,.22,.07],C.blue);
+    P('sphere',[-.18,.44,.02],[.12,.12,.12],'#f0c9a8');
+  },
+  clinic(P){
+    P('rbox',[0,.32,0],[.96,.62,.86],C.white);
+    P('box',[0,.15,.44],[.3,.34,.03],C.teal);
+    P('glowbox',[0,.46,.43],[.34,.09,.03],'#ffe3b0');
+    P('box',[0,.62,.2],[.3,.05,.24],C.coral);
+    P('box',[0,.7,.2],[.06,.2,.06],C.coral);
+    P('box',[0,.7,.2],[.2,.06,.06],C.coral);
+    P('glowbox',[-.3,.34,.43],[.16,.14,.03],'#cfe6e2');
+  },
+  bus(P){
+    P('rbox',[0,.26,0],[.96,.34,.46],C.teal);
+    P('rbox',[0,.5,0],[.9,.14,.44],C.white);
+    P('glowbox',[.08,.3,.235],[.62,.14,.02],'#dff0ee');
+    [-.28,.28].forEach(x=>[-1,1].forEach(s=>P('cylinder',[x,.11,s*.2],[.14,.1,.14],C.ink,[0,0,Math.PI/2])));
+    P('cylinder',[.56,.42,-.3],[.05,.5,.05],C.stone);
+    P('box',[.56,.64,-.3],[.2,.14,.03],C.coral);
+  },
+  bike(P){
+    P('torus',[-.3,.17,0],[.32,.32,.32],C.ink);
+    P('torus',[.3,.17,0],[.32,.32,.32],C.ink);
+    P('box',[0,.28,0],[.52,.04,.04],C.coral);
+    P('box',[-.06,.22,0],[.04,.2,.04],C.coral);
+    P('box',[.3,.32,0],[.04,.22,.04],C.coral);
+    P('box',[.3,.42,0],[.24,.03,.03],C.ink);
+    P('cylinder',[.18,.36,0],[.03,.12,.03],C.ink);
+    P('cylinder',[-.24,.42,0],[.04,.24,.04],C.stone);
+    P('box',[-.24,.54,0],[.16,.1,.03],C.yellow);
+  },
+  court(P){
+    P('box',[0,.06,0],[1.18,.1,.92],C.green);
+    P('box',[0,.12,0],[1.02,.012,.03],C.white);
+    [-.34,.34].forEach(z=>P('box',[0,.12,z],[.66,.012,.025],C.white));
+    P('box',[0,.12,0],[.03,.012,.92],C.white);
+    P('cylinder',[-.52,.3,0],[.05,.5,.05],C.stone);
+    P('box',[-.52,.5,0],[.02,.26,.34],C.white);
+    P('torus',[-.47,.44,0],[.16,.16,.16],C.coral);
+    P('torus',[.18,.12,0],[.2,.2,.2],C.stone,[Math.PI/2,0,0]);
+  },
+  farm(P){
+    P('box',[0,.06,0],[1.16,.12,.96],C.soil);
+    for(let r=0;r<3;r++) for(let c=0;c<3;c++)
+      P('ico',[-.34+c*.34,.2,-.26+r*.26],[.18,.2,.18], r%2?C.leaf1:C.leaf3);
+    [-.56,.56].forEach(x=>[-.44,.44].forEach(z=>P('box',[x,.2,z],[.03,.28,.03],C.wood)));
+    P('box',[0,.2,-.44],[1.12,.03,.03],C.wood);
+  },
+  river(P){
+    P('box',[0,.06,0],[1.18,.1,1.0],C.leaf2);
+    P('box',[0,.09,0],[.5,.04,1.0],C.water);
+    P('box',[0,.13,0],[.34,.05,.2],C.wood);
+    P('box',[0,.16,.11],[.42,.03,.03],C.cream);
+    P('sphere',[-.44,.18,-.24],[.24,.24,.24],C.leaf3);
+    P('cylinder',[.44,.18,.22],[.05,.24,.05],C.wood);
+    P('ico',[.44,.38,.22],[.3,.24,.3],C.leaf1);
+  },
+  stage(P){
+    P('box',[0,.1,0],[1.12,.16,.8],C.wood);
+    P('box',[0,.42,-.34],[1.1,.5,.06],C.teal);
+    P('box',[0,.7,-.34],[1.16,.06,.2],C.coral);
+    [-.4,.4].forEach(x=>P('glowsphere',[x,.72,.2],[.12,.12,.12],'#ffe9b8'));
+    P('cylinder',[.18,.3,.06],[.05,.22,.05],C.cream);
+    P('sphere',[.18,.45,.06],[.1,.1,.1],'#f0c9a8');
+    P('box',[-.2,.3,.08],[.12,.24,.06],C.pink);
+  },
+  book(P){
+    P('box',[0,.09,0],[.52,.18,.72],C.stone);
+    P('box',[0,.3,-.14],[.92,.1,.6],C.coral);
+    P('box',[0,.38,-.14],[.86,.14,.56],C.cream);
+    P('box',[0,.47,-.14],[.9,.06,.6],C.coral);
+    P('box',[0,.38,-.14],[.04,.16,.58],C.roofDark);
+    P('glowbox',[.3,.38,.13],[.14,.1,.01],'#ffe3b0');
+  },
+  coin(P){
+    P('cylinder',[0,.12,0],[.62,.24,.62],C.stone);
+    P('cylinder',[0,.54,0],[.72,.16,.72],'#e8c15a',[Math.PI/2,0,0]);
+    P('torus',[0,.54,.09],[.44,.44,.44],C.coral);
+    P('box',[0,.54,.1],[.06,.2,.02],C.ink);
+    P('glowbox',[0,.82,0],[.06,.12,.06],'#ffe3b0');
+  },
+  clock(P){
+    P('cylinder',[0,.28,0],[.14,.56,.14],C.teal);
+    P('cylinder',[0,.7,0],[.82,.14,.82],C.cream,[Math.PI/2,0,0]);
+    P('torus',[0,.7,.08],[.68,.68,.68],C.coral);
+    P('box',[0,.75,.17],[.05,.2,.02],C.ink);
+    P('box',[.06,.7,.17],[.16,.05,.02],C.ink);
+    P('box',[0,.1,0],[.4,.06,.4],C.stone);
+  },
+  globe(P){
+    P('cylinder',[0,.1,0],[.46,.2,.46],C.wood);
+    P('sphere',[0,.58,0],[.88,.88,.88],C.blue);
+    P('torus',[0,.58,0],[1.0,1.0,1.0],C.yellow,[1.25,0,0]);
+    P('torus',[0,.58,0],[.92,.92,.92],C.teal2,[0,0,1.25]);
+    P('ico',[.04,.66,.14],[.3,.22,.1],C.leaf1);
+    P('ico',[-.16,.48,-.2],[.24,.2,.1],C.leaf1);
+  },
+  tower(P){
+    P('box',[0,.12,0],[.52,.24,.52],C.stone);
+    P('box',[0,.52,0],[.34,.56,.34],C.wood);
+    P('box',[0,.33,0],[.4,.05,.4],C.cream);
+    P('hip',[0,.88,0],[.52,.24,.52],C.coral);
+    P('glowsphere',[0,.98,0],[.1,.1,.1],'#ffe2a0');
+    P('cylinder',[.22,.4,0],[.03,.26,.03],C.ink);
+  },
+  crossing(P){
+    P('box',[0,.05,0],[1.2,.1,.98],C.road);
+    for(let i=0;i<4;i++) P('box',[-.18+i*.12,.11,.22],[.06,.012,.5],C.white);
+    P('box',[0,.11,-.24],[.96,.012,.07],C.white);
+    P('cylinder',[.46,.35,-.32],[.05,.58,.05],C.ink);
+    P('glowbox',[.46,.62,-.32],[.13,.13,.13],'#ffd9a0');
+    P('box',[.46,.74,-.32],[.22,.05,.06],C.coral);
+  },
+  park(P){
+    P('box',[0,.04,0],[1.16,.08,.96],C.leaf2);
+    P('box',[0,.08,-.04],[.28,.02,.92],C.cream);
+    [[-.36,-.22],[.34,-.26],[-.34,.26],[.36,.24]].forEach(([x,z])=>{
+      P('cylinder',[x,.18,z],[.05,.3,.05],C.wood);
+      P('ico',[x,.42,z],[.32,.3,.32], rnd()>.5?C.leaf1:C.leaf3);
+    });
+    P('box',[.36,.14,.02],[.3,.06,.14],C.wood);
+    P('box',[.36,.1,.02],[.24,.1,.04],C.stone);
+    P('glowsphere',[-.12,.15,.42],[.07,.12,.07],'#ffe2a0');
+    P('cylinder',[-.12,.08,.42],[.03,.16,.03],C.ink);
+  }
+};
+
+const MODEL_TAGS = { house:'HOUSE', hall:'CIVIC HALL', kiosk:'PAVILION', classroom:'CLASSROOM', clinic:'CLINIC', bus:'BUS STOP', bike:'BIKE HUB', court:'COURT', farm:'GARDEN', river:'WATERWAY', stage:'STAGE', book:'LANDMARK', coin:'LANDMARK', clock:'LANDMARK', globe:'LANDMARK', tower:'TOWER', crossing:'CROSSING', park:'PARK' };
+/* =========================================================
+   ISLANDS
+   ========================================================= */
+function insideHex(x,z,rad){
+  const a = Math.atan2(z,x);
+  const seg = Math.PI/3;
+  let t = ((a % seg) + seg) % seg - seg/2;
+  const bound = (rad*Math.sqrt(3)/2) / Math.cos(t);
+  return Math.hypot(x,z) <= bound;
+}
+
+function makeGroundTexture(type){
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 256;
+  const g = cv.getContext('2d');
+  g.fillStyle = '#f2e7d7'; g.fillRect(0,0,256,256);
+  if(type==='brick'){
+    for(let row=0; row<8; row++){
+      const h = 32, y = row*h;
+      for(let col=-1; col<9; col++){
+        const w = 32, x = col*w + (row%2? w/2:0);
+        const v = 0.95 + rnd()*0.09;
+        g.fillStyle = `rgb(${Math.floor(238*v)},${Math.floor(225*v)},${Math.floor(208*v)})`;
+        g.fillRect(x+1.5,y+1.5,w-3,h-3);
+      }
+      g.strokeStyle = 'rgba(196,178,158,.35)'; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(0,y+.5); g.lineTo(256,y+.5); g.stroke();
+    }
+  } else if(type==='speckle'){
+    for(let i=0;i<620;i++){
+      const x = rnd()*256, y = rnd()*256, r = .6 + rnd()*2.4;
+      g.fillStyle = `rgba(${180+rnd()*40|0},${165+rnd()*40|0},${145+rnd()*35|0},${.18+rnd()*.28})`;
+      g.beginPath(); g.arc(x,y,r,0,6.283); g.fill();
+    }
+    g.strokeStyle = 'rgba(206,190,170,.22)';
+    for(let i=0;i<14;i++){ g.beginPath(); g.arc(rnd()*256,rnd()*256,20+rnd()*50,0,6.283); g.stroke(); }
+  } else {
+    for(let i=0;i<18;i++){
+      g.fillStyle = `rgba(${226+rnd()*16|0},${210+rnd()*16|0},${188+rnd()*15|0},${.5+rnd()*.4})`;
+      const y = i*15 + rnd()*3;
+      g.fillRect(0, y, 256, 5 + rnd()*3);
+    }
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+const GROUND_TEX = { brick:makeGroundTexture('brick'), speckle:makeGroundTexture('speckle'), stripe:makeGroundTexture('stripe') };
+const GROUND_MAT = {};
+Object.keys(GROUND_TEX).forEach(k=>{ GROUND_MAT[k] = new THREE.MeshStandardMaterial({ map:GROUND_TEX[k], roughness:.92, metalness:0 }); });
+
+const WALL_GEO = new THREE.CylinderGeometry(R-0.06, R-0.06, 1.6, 6, 1, true);
+const RIM_GEO = new THREE.CylinderGeometry(R-0.02, R-0.02, .16, 6, 1, true);
+const CURB_GEO = new THREE.RingGeometry(1.94, 2.0, 6).rotateZ(Math.PI/6).rotateX(-Math.PI/2);
+const WALK_GEO = new THREE.RingGeometry(1.66, 1.94, 6).rotateZ(Math.PI/6).rotateX(-Math.PI/2);
+const FOAM_GEO = new THREE.RingGeometry(R+0.02, R+0.18, 6).rotateZ(Math.PI/6).rotateX(-Math.PI/2);
+const SHALLOW_GEO = new THREE.CircleGeometry(R+0.7, 6).rotateZ(Math.PI/6).rotateX(-Math.PI/2);
+const CURB_MAT = new THREE.MeshStandardMaterial({ color:'#e4d6c3', roughness:.9 });
+const WALK_MAT = new THREE.MeshStandardMaterial({ color:'#efe0cc', roughness:.92 });
+const FOAM_MAT = new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.55, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2 });
+const SHALLOW_MAT = new THREE.MeshBasicMaterial({ color:0xbfe3e2, transparent:true, opacity:.26, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-1 });
+
+function buildIslands(){
+  AXIAL.forEach(([q,r], idx)=>{
+    const theme = DATA.themes[idx];
+    const w = axialToWorld(q,r);
+    const rot = (idx%3 - 1) * 0.06;
+    const isl = { theme, x:w.x, z:w.z, idx, rot, items:[] };
+    islands.push(isl);
+    theme.island = isl;
+
+    const topGeo = new THREE.CircleGeometry(R-0.05, 6).rotateZ(Math.PI/6).rotateX(-Math.PI/2);
+    const p = topGeo.attributes.position, uv = topGeo.attributes.uv;
+    for(let i=0;i<p.count;i++) uv.setXY(i, (p.getX(i)+w.x)/2.2, (p.getZ(i)+w.z)/2.2);
+    uv.needsUpdate = true;
+    const topMat = GROUND_MAT[theme.ground] || GROUND_MAT.brick;
+    const top = new THREE.Mesh(topGeo, topMat);
+    top.position.set(w.x, TOP, w.z);
+    top.receiveShadow = true;
+    top.userData.islandId = theme.id;
+    scene.add(top);
+    isl.top = top;
+    pickables.push(top);
+
+    const wall = new THREE.Mesh(WALL_GEO, waterMat);
+    wall.position.set(w.x, TOP-0.8, w.z);
+    scene.add(wall);
+
+    const rim = new THREE.Mesh(RIM_GEO, new THREE.MeshStandardMaterial({ color:theme.color, roughness:.8 }));
+    rim.position.set(w.x, TOP-0.045, w.z);
+    rim.castShadow = false;
+    scene.add(rim);
+
+    const shallow = new THREE.Mesh(SHALLOW_GEO, SHALLOW_MAT);
+    shallow.position.set(w.x, WATER_Y+0.012, w.z);
+    shallow.renderOrder = 1;
+    scene.add(shallow);
+
+    const foam = new THREE.Mesh(FOAM_GEO, FOAM_MAT);
+    foam.position.set(w.x, WATER_Y+0.022, w.z);
+    foam.renderOrder = 2;
+    scene.add(foam);
+
+    const curb = new THREE.Mesh(CURB_GEO, CURB_MAT);
+    curb.position.set(w.x, TOP+0.012, w.z);
+    curb.receiveShadow = true;
+    scene.add(curb);
+
+    const walk = new THREE.Mesh(WALK_GEO, WALK_MAT);
+    walk.position.set(w.x, TOP+0.018, w.z);
+    walk.receiveShadow = true;
+    scene.add(walk);
+
+    // label pill at the front cliff
+    const el = document.createElement('div');
+    el.className = 'islLabel';
+    el.innerHTML = `<b>${theme.num}</b><span>${t(theme.zh,theme.en)}</span>`;
+    el.addEventListener('pointerdown', ev=>{ ev.stopPropagation(); });
+    el.addEventListener('click', ev=>{ ev.stopPropagation(); selectIsland(theme); });
+    const label = new CSS2DObject(el);
+    label.position.set(w.x, TOP+0.55, w.z + 1.62);
+    scene.add(label);
+    isl.labelEl = el;
+    isl.label = label;
+  });
+
+  buildIslandProps();
+  buildBridges();
+}
+function buildBridges(){
+  const dirs = [[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]];
+  const used = new Set();
+  islands.forEach((a, i)=>{
+    dirs.forEach(([dq,dr])=>{
+      const j = AXIAL.findIndex(([q,r])=> q===AXIAL[i][0]+dq && r===AXIAL[i][1]+dr);
+      if(j < 0) return;
+      const key = Math.min(i,j)+'-'+Math.max(i,j);
+      if(used.has(key)) return;
+      used.add(key);
+      const A = islands[i], B = islands[j];
+      const nx = (B.x-A.x)/Math.hypot(B.x-A.x, B.z-A.z);
+      const nz = (B.z-A.z)/Math.hypot(B.x-A.x, B.z-A.z);
+      const start = new THREE.Vector3(A.x + nx*1.74, TOP, A.z + nz*1.74);
+      const end = new THREE.Vector3(B.x - nx*1.74, TOP, B.z - nz*1.74);
+      const len = start.distanceTo(end);
+      const ry = Math.atan2(nx, nz);
+      for(let k=0;k<9;k++){
+        const f = (k+0.5)/9;
+        const arch = Math.sin(f*Math.PI) * (0.045 + ((i+j)%4)*0.014);
+        pushPart(kitEntries, 'rbox', [lerp(start.x,end.x,f), TOP+0.02+arch, lerp(start.z,end.z,f)], [0.34, 0.055, len/9*1.12], '#e8d9c4', [0, ry, 0]);
+      }
+      [-1,1].forEach(side=>{
+        const ox = Math.cos(ry)*side*0.17, oz = -Math.sin(ry)*side*0.17;
+        pushPart(kitEntries, 'box', [(start.x+end.x)/2+ox, TOP+0.15, (start.z+end.z)/2+oz], [0.03, 0.03, len*0.92], '#c5b5a7', [0, ry, 0]);
+      });
+      A.bridges = A.bridges||[]; B.bridges = B.bridges||[];
+      const midA = nearestMidNode(A, B);
+      const midB = nearestMidNode(B, A);
+      A.bridges.push({to:B, node:midA});
+      B.bridges.push({to:A, node:midB});
+      A.bridgeLinks = A.bridgeLinks||[]; A.bridgeLinks.push([midA, midB]);
+    });
+  });
+}
+
+function nearestMidNode(a,b){
+  if(!a.nodes) return null;
+  let best = null, bd = 1e9;
+  for(let k=6;k<12;k++){
+    const n = a.nodes[k];
+    const d = Math.hypot(n.x-b.x, n.z-b.z);
+    if(d < bd){ bd = d; best = n; }
+  }
+  return best;
+}
+
+function buildIslandProps(){
+  islands.forEach((isl, idx)=>{
+    const theme = isl.theme;
+    const baseX = isl.x, baseZ = isl.z;
+    // walk nodes (12)
+    isl.nodes = [];
+    for(let k=0;k<12;k++){
+      const isMid = k%2===1;
+      const a = -Math.PI/2 + k*Math.PI/6;
+      const rr = WALK_R;
+      isl.nodes.push({ x:baseX + Math.cos(a)*rr, z:baseZ + Math.sin(a)*rr, y:TOP, island:isl, idx:k, adj:[] });
+    }
+    // lamps
+    for(let k=0;k<6;k++){
+      const a = -Math.PI/2 + k*Math.PI/3;
+      const x = baseX + Math.cos(a)*1.83, z = baseZ + Math.sin(a)*1.83;
+      pushPart(kitEntries, 'cylinder', [x, TOP+0.19, z], [0.05, 0.38, 0.05], '#8f8278');
+      pushPart(kitEntries, 'glowsphere', [x, TOP+0.42, z], [0.1, 0.1, 0.1], '#fff0c8');
+      pushPart(smallEntries, 'cylinder', [x, TOP+0.02, z], [0.1, 0.04, 0.1], '#c5b5a7');
+      isl.lamps = isl.lamps||[]; isl.lamps.push(new THREE.Vector3(x, TOP, z));
+    }
+    // pots at edge midpoints
+    for(let k=0;k<6;k++){
+      const a = -Math.PI/2 + Math.PI/6 + k*Math.PI/3;
+      const x = baseX + Math.cos(a)*1.72, z = baseZ + Math.sin(a)*1.72;
+      pushPart(smallEntries, 'cylinder', [x, TOP+0.09, z], [0.17, 0.18, 0.17], '#d8bfa4');
+      pushPart(smallEntries, 'ico', [x, TOP+0.22, z], [0.24, 0.2, 0.24], k%2?C.leaf1:C.leaf2);
+      if(idx%2===0) pushPart(smallEntries, 'sphere', [x+0.06, TOP+0.27, z], [0.1, 0.1, 0.1], k%2?C.pink:C.yellow);
+    }
+    // species trees around the rim
+    const species = idx % 5;
+    const treeCount = 4 + (idx%3);
+    for(let k=0;k<treeCount;k++){
+      const a = -Math.PI/2 + (k+0.4)/treeCount*Math.PI*2 + idx*0.4;
+      const x = baseX + Math.cos(a)*1.5, z = baseZ + Math.sin(a)*1.5;
+      const s = 0.8 + rnd()*0.35;
+      pushPart(kitEntries, 'cylinder', [x, TOP+0.2*s, z], [0.07*s, 0.4*s, 0.07*s], '#8a6a4c');
+      if(species===0){
+        pushPart(kitEntries, 'cone', [x, TOP+0.55*s, z], [0.6*s, 0.7*s, 0.6*s], C.leaf3);
+        pushPart(kitEntries, 'cone', [x, TOP+0.82*s, z], [0.44*s, 0.62*s, 0.44*s], C.leaf1);
+      } else if(species===1){
+        pushPart(kitEntries, 'ico', [x, TOP+0.58*s, z], [0.66*s, 0.52*s, 0.66*s], C.pink);
+        pushPart(kitEntries, 'ico', [x+0.14*s, TOP+0.46*s, z+0.08*s], [0.4*s, 0.34*s, 0.4*s], '#f7cfd9');
+      } else if(species===2){
+        pushPart(kitEntries, 'ico', [x, TOP+0.55*s, z], [0.6*s, 0.56*s, 0.6*s], C.leaf1);
+        pushPart(kitEntries, 'ico', [x-0.16*s, TOP+0.44*s, z+0.12*s], [0.34*s, 0.32*s, 0.34*s], C.leaf3);
+        pushPart(kitEntries, 'sphere', [x+0.16*s, TOP+0.46*s, z-0.1*s], [0.11*s,0.11*s,0.11*s], C.coral);
+      } else if(species===3){
+        for(let j=0;j<4;j++){
+          const aa = j*Math.PI/2 + 0.4;
+          pushPart(kitEntries, 'cone', [x+Math.cos(aa)*0.22*s, TOP+0.7*s, z+Math.sin(aa)*0.22*s], [0.55*s, 0.16*s, 0.2*s], C.leaf2, [0.5, -aa, 0]);
+        }
+        pushPart(kitEntries, 'sphere', [x, TOP+0.72*s, z], [0.16*s,0.12*s,0.16*s], C.leaf1);
+      } else {
+        pushPart(kitEntries, 'dome', [x, TOP+0.44*s, z], [0.8*s, 0.6*s, 0.8*s], C.leaf3);
+        pushPart(kitEntries, 'ico', [x+0.2*s, TOP+0.36*s, z], [0.3*s,0.34*s,0.3*s], C.leaf2);
+      }
+    }
+    // benches
+    for(let k=0;k<2;k++){
+      const a = -Math.PI/2 + (k+0.5)*Math.PI + idx*0.7;
+      const x = baseX + Math.cos(a)*1.62, z = baseZ + Math.sin(a)*1.62;
+      const ry = -a + Math.PI/2;
+      pushPart(smallEntries, 'box', [x, TOP+0.14, z], [0.38, 0.05, 0.14], '#b48560', [0, ry, 0]);
+      pushPart(smallEntries, 'box', [x, TOP+0.06, z], [0.3, 0.12, 0.1], '#c5b5a7', [0, ry, 0]);
+    }
+    // string lights on the rim
+    for(let k=0;k<12;k++){
+      const a = -Math.PI/2 + k*Math.PI/6;
+      pushPart(smallEntries, 'glowsphere', [baseX+Math.cos(a)*1.99, TOP+0.03, baseZ+Math.sin(a)*1.99], [0.045,0.045,0.045], k%3? '#fff0c8':'#ffd0a0');
+    }
+  });
+}
+function chooseSlots(n, cell, seed){
+  const step = cell*1.04;
+  const cand = [];
+  for(let row=-3; row<=3; row++){
+    const z = row*step*0.9;
+    const off = (row&1)? step*0.5 : 0;
+    for(let col=-3; col<=3; col++){
+      const x = col*step + off;
+      if(!insideHex(x,z,1.34)) continue;
+      if(Math.hypot(x, z+0.58) < 0.76) continue;
+      cand.push({x,z, key: Math.hypot(x*0.9, (z-0.2)*1.1) + ((col+row*7+seed)%5)*0.013});
+    }
+  }
+  cand.sort((a,b)=> a.key-b.key);
+  const out = [];
+  for(const c of cand){
+    if(out.length >= n) break;
+    if(out.every(o=> Math.hypot(o.x-c.x, o.z-c.z) > cell*1.02)) out.push(c);
+  }
+  return out;
+}
+
+function placeModel(isl, item, parts, lx, lz, scale, rot){
+  const base = new THREE.Matrix4().makeTranslation(isl.x, TOP+0.015, isl.z);
+  const itemM = new THREE.Matrix4().compose(
+    new THREE.Vector3(lx, 0, lz),
+    new THREE.Quaternion().setFromEuler(new THREE.Euler(0, rot, 0)),
+    new THREE.Vector3(scale, scale, scale)
+  );
+  const full = base.multiply(itemM);
+  const colorByKind = [];
+  parts.forEach(p=>{
+    const local = eulerMatrix(p.pos, p.scl, p.rot);
+    const world = full.clone().multiply(local);
+    world.scale(new THREE.Vector3(1+(rnd()-.5)*0.014, 1+(rnd()-.5)*0.014, 1+(rnd()-.5)*0.014));
+    const e = { kind:p.kind, matrix:world, color:new THREE.Color(p.color), itemId:item?item.id:null };
+    (item && item.small ? smallEntries : kitEntries).push(e);
+  });
+}
+
+function collectModel(name){
+  const parts = [];
+  const P = (kind,pos,scl,color,rot)=> parts.push({kind,pos,scl,color,rot});
+  (MODELS[name] || MODELS.house)(P, null);
+  return parts;
+}
+function collectHall(accent){
+  const parts = [];
+  const P = (kind,pos,scl,color,rot)=> parts.push({kind,pos,scl,color,rot});
+  MODELS.hall(P, accent);
+  return parts;
+}
+
+function buildBuildings(){
+  islands.forEach((isl, idx)=>{
+    const theme = isl.theme;
+    const accent = theme.color;
+    // civic hall
+    const hallParts = collectHall(accent);
+    const hallItem = { id:theme.id+'-hall', themeId:theme.id, isHall:true };
+    placeModel(isl, hallItem, hallParts, 0, -0.58, 1.15, 0);
+    isl.hall = { pos:new THREE.Vector3(isl.x, TOP, isl.z-0.58), item:hallItem };
+
+    const items = theme.items;
+    const n = items.length;
+    const cell = clamp(0.62 - (n-4)*0.053, 0.46, 0.62);
+    const slots = chooseSlots(n, cell, idx*3+1);
+    items.forEach((item, k)=>{
+      const slot = slots[k] || { x:0, z:0.75 };
+      const rot = (rnd()-0.5)*0.5;
+      const parts = collectModel(item.model);
+      item._parts = parts.map(p=>({...p, color:p.color}));
+      item._scale = cell*1.14;
+      item._rot = rot;
+      placeModel(isl, item, parts, slot.x, slot.z, item._scale, rot);
+      item._world = new THREE.Vector3(isl.x+slot.x, TOP, isl.z+slot.z);
+      item._top = TOP + cell*1.42;
+      itemWorld.set(item.id, item._world);
+      item.theme = theme;
+      item.themeId = theme.id;
+      itemById.set(item.id, item);
+      themeById.set(theme.id, theme);
+      isl.items.push(item);
+      item.index = k+1;
+    });
+  });
+}
+
+/* ---------- walk graph ---------- */
+function buildWalkGraph(){
+  islands.forEach(isl=>{
+    for(let k=0;k<12;k++){
+      const n = isl.nodes[k], nn = isl.nodes[(k+1)%12];
+      const w = Math.hypot(n.x-nn.x, n.z-nn.z);
+      n.adj.push({ n:nn, w });
+      nn.adj.push({ n:n, w });
+    }
+    (isl.bridgeLinks||[]).forEach(([a,b])=>{
+      if(!a||!b) return;
+      const w = Math.hypot(a.x-b.x, a.z-b.z);
+      a.adj.push({ n:b, w });
+      b.adj.push({ n:a, w });
+    });
+  });
+  graph = { nodes: islands.flatMap(i=>i.nodes) };
+}
+
+function dijkstra(start, end){
+  const nodes = graph.nodes;
+  const dist = new Map(), prev = new Map(), open = [];
+  nodes.forEach(n=> dist.set(n, Infinity));
+  dist.set(start, 0); open.push(start);
+  while(open.length){
+    let bi = 0;
+    for(let i=1;i<open.length;i++) if(dist.get(open[i]) < dist.get(open[bi])) bi = i;
+    const cur = open.splice(bi,1)[0];
+    if(cur === end) break;
+    cur.adj.forEach(e=>{
+      const nd = dist.get(cur) + e.w;
+      if(nd < (dist.get(e.n) ?? Infinity)-1e-6){
+        dist.set(e.n, nd); prev.set(e.n, cur);
+        if(!open.includes(e.n)) open.push(e.n);
+      }
+    });
+  }
+  const path = [];
+  let c = end;
+  while(c){ path.unshift(c); c = prev.get(c); }
+  return path;
+}
+
+function routeBetween(themeA, themeB){
+  const A = themeA.island, B = themeB.island;
+  let start = A.nodes[0], end = B.nodes[0], bd = 1e9;
+  A.nodes.forEach(na=> B.nodes.forEach(nb=>{
+    const d = Math.hypot(na.x-nb.x, na.z-nb.z);
+    if(d < bd){ bd = d; start = na; end = nb; }
+  }));
+  const path = dijkstra(start, end);
+  return path.map(n=> new THREE.Vector3(n.x, TOP+0.03, n.z));
+}
+
+function buildFlows(){
+  DATA.flows.forEach(f=>{
+    const from = themeById.get(f.from), to = themeById.get(f.to);
+    if(!from || !to) return;
+    const route = routeBetween(from, to);
+    const flow = { ...f, fromTheme:from, toTheme:to, route, walkers:[] };
+    flowById.set(f.id, flow);
+    flows.push(flow);
+    const pts = route.map(p=> new THREE.Vector3(p.x, TOP+0.22, p.z));
+    if(pts.length < 2) pts.push(pts[0].clone().add(new THREE.Vector3(0.01,0,0.01)));
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal', 0.4);
+    const len = curve.getLength();
+    const geo = new THREE.TubeGeometry(curve, Math.max(28, pts.length*3), 0.05, 6, false);
+    const mat = new THREE.ShaderMaterial({
+      transparent:true, depthWrite:false, fog:false,
+      uniforms:{
+        uTime:{value:0}, uLength:{value:len}, uPattern:{value: f.evidence==='official'?0 : f.evidence==='thematic'?1 : 2},
+        uColor:{value:new THREE.Color('#db6a41')}, uOpacity:{value:.82}
+      },
+      vertexShader:`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+      fragmentShader:`
+        uniform float uTime, uLength, uPattern, uOpacity; uniform vec3 uColor; varying vec2 vUv;
+        void main(){
+          float u = vUv.x*uLength*5.0 - uTime*1.4;
+          float f = fract(u);
+          if(uPattern > 0.5 && f > 0.6) discard;
+          if(uPattern > 1.5 && f > 0.3) discard;
+          gl_FragColor = vec4(uColor, uOpacity);
+        }`
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.visible = false;
+    mesh.userData.flowId = f.id;
+    scene.add(mesh);
+    flow.mesh = mesh;
+    flow.material = mat;
+    flow.length = len;
+    flow.curve = curve;
+    flow.points = pts;
+  });
+}
+/* =========================================================
+   PEOPLE
+   ========================================================= */
+const ROLES = {
+  student:   { body:'#f2b5c6', hair:'#2f2a28', hat:'cap',      acc:'pack' },
+  parent:    { body:'#6f7fb5', hair:'#3b322c', hat:'none',     acc:'stroller' },
+  researcher:{ body:'#fff8f4', hair:'#4a3b31', hat:'none',     acc:'tablet' },
+  farmer:    { body:'#8db86f', hair:'#3b322c', hat:'straw',    acc:'basket' },
+  worker:    { body:'#db6a41', hair:'#2f2a28', hat:'helmet',   acc:'case' },
+  traveler:  { body:'#58a6a6', hair:'#3b322c', hat:'none',     acc:'suitcase' },
+  elder:     { body:'#c5b5a7', hair:'#e8e2da', hat:'none',     acc:'cane' },
+  commuter:  { body:'#3e7c8c', hair:'#2f2a28', hat:'none',     acc:'bike' }
+};
+const SKIN = ['#f0c9a8','#e5b48f','#c99270','#f6d7b8'];
+const ACTOR = { legs:null, arms:null, body:null, head:null, hair:null, eye:null, shadow:null, hat:null, accBox:null, accCyl:null };
+let walkerIndex = new WeakMap();
+
+function badgeTexture(cargo){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const g = cv.getContext('2d');
+  g.clearRect(0,0,128,128);
+  g.fillStyle = '#fffdf9'; g.beginPath(); g.arc(64,64,54,0,6.283); g.fill();
+  g.strokeStyle = '#db6a41'; g.lineWidth = 7; g.beginPath(); g.arc(64,64,50,0,6.283); g.stroke();
+  g.strokeStyle = '#211d1d'; g.fillStyle = '#211d1d'; g.lineWidth = 5; g.lineCap = 'round'; g.lineJoin = 'round';
+  const glyph = (fn)=>{ g.save(); g.translate(64,64); fn(g); g.restore(); };
+  if(cargo==='書本'||cargo==='books'||cargo==='guidebooks'||cargo==='導覽手冊'){
+    glyph(g=>{ g.strokeRect(-22,-16,20,34); g.strokeRect(2,-16,20,34); g.beginPath(); g.moveTo(0,-14); g.lineTo(0,18); g.stroke(); });
+  } else if(cargo==='餐盒'||cargo==='meal boxes'||cargo==='藥箱'||cargo==='medicine'){
+    glyph(g=>{ g.strokeRect(-22,-12,44,30); g.beginPath(); g.moveTo(-8,-12); g.lineTo(-8,-20); g.lineTo(8,-20); g.lineTo(8,-12); g.stroke(); if(cargo==='藥箱'||cargo==='medicine'){ g.beginPath(); g.moveTo(0,-4); g.lineTo(0,12); g.moveTo(-8,4); g.lineTo(8,4); g.stroke(); } });
+  } else if(cargo==='樹苗'||cargo==='seedlings'){
+    glyph(g=>{ g.beginPath(); g.moveTo(0,20); g.lineTo(0,-4); g.stroke(); g.beginPath(); g.ellipse(-13,-9,11,7,-0.6,0,6.283); g.stroke(); g.beginPath(); g.ellipse(13,-15,11,7,0.6,0,6.283); g.stroke(); });
+  } else if(cargo==='筆電'||cargo==='laptops'||cargo==='平板'||cargo==='tablets'){
+    glyph(g=>{ g.strokeRect(-20,-14,40,24); g.beginPath(); g.moveTo(-26,16); g.lineTo(26,16); g.stroke(); });
+  } else if(cargo==='監測儀'||cargo==='sensors'){
+    glyph(g=>{ g.strokeRect(-16,-6,32,26); g.beginPath(); g.moveTo(0,-6); g.lineTo(0,-22); g.stroke(); g.beginPath(); g.arc(0,-26,4,0,6.283); g.fill(); g.beginPath(); g.moveTo(-10,26); g.lineTo(-14,32); g.moveTo(10,26); g.lineTo(14,32); g.stroke(); });
+  } else {
+    glyph(g=>{ g.beginPath(); g.arc(0,0,18,0,6.283); g.stroke(); g.beginPath(); g.arc(0,0,5,0,6.283); g.fill(); });
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+const BADGE_TEX = new Map();
+function getBadge(cargo){
+  if(!BADGE_TEX.has(cargo)) BADGE_TEX.set(cargo, badgeTexture(cargo));
+  return BADGE_TEX.get(cargo);
+}
+
+function buildWalkers(){
+  const N = flows.reduce((s,f)=> s + (f.walkers.length||0), 0);
+  let total = 0;
+  flows.forEach(f=>{
+    const n = 4 + Math.floor(rnd()*4);
+    f.walkers = [];
+    for(let i=0;i<n;i++){
+      const roleKey = f.walker;
+      const role = ROLES[roleKey] || ROLES.student;
+      const w = {
+        flow:f, roleKey, role,
+        dist: ((i + 0.5)/n) * (f.length||1),
+        dir: i%2 ? -1 : 1,
+        wait: 0,
+        speed: (roleKey==='commuter'? .62 + rnd()*.08 : .32 + rnd()*.08),
+        phase: rnd(),
+        height: .33 + rnd()*.04,
+        scale: 1,
+        cargo: f.cargo,
+        nameEl:null, sprite:null
+      };
+      f.walkers.push(w);
+      walkers.push(w);
+      total++;
+    }
+  });
+
+  const mk = (geo, mat, count)=> {
+    const im = new THREE.InstancedMesh(geo, mat, Math.max(1,count));
+    im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    im.frustumCulled = false;
+    im.castShadow = false;
+    im.receiveShadow = false;
+    scene.add(im);
+    return im;
+  };
+  const matPerson = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:.82, metalness:0 });
+  const matPlain = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:.86, metalness:0 });
+  const legGeo = new THREE.BoxGeometry(.042,.12,.042).translate(0,-.06,0);
+  const armGeo = new THREE.BoxGeometry(.034,.11,.034).translate(0,-.055,0);
+  const bodyGeo = new THREE.CapsuleGeometry(.048,.06,3,8);
+  const headGeo = new THREE.SphereGeometry(.078,12,10);
+  const hairGeo = new THREE.SphereGeometry(.081,12,8,0,Math.PI*2,0,Math.PI*.62);
+  const eyeGeo = new THREE.SphereGeometry(.0095,6,5);
+  const hatGeo = new THREE.ConeGeometry(.082,.1,10);
+  const shadowGeo = new THREE.CircleGeometry(.085,12).rotateX(-Math.PI/2);
+  const accBoxGeo = new THREE.BoxGeometry(1,1,1);
+  const accCylGeo = new THREE.CylinderGeometry(.5,.5,1,8);
+
+  ACTOR.legs = mk(legGeo, matPerson, total*2);
+  ACTOR.arms = mk(armGeo, matPerson, total*2);
+  ACTOR.body = mk(bodyGeo, matPerson, total);
+  ACTOR.head = mk(headGeo, matPerson, total);
+  ACTOR.hair = mk(hairGeo, matPlain, total);
+  ACTOR.eye = mk(eyeGeo, matPlain, total*2);
+  ACTOR.hat = mk(hatGeo, matPlain, total);
+  ACTOR.accBox = mk(accBoxGeo, matPlain, total);
+  ACTOR.accCyl = mk(accCylGeo, matPlain, total);
+  ACTOR.shadow = mk(shadowGeo, new THREE.MeshBasicMaterial({ color:0x211d1d, transparent:true, opacity:.22, depthWrite:false }), total);
+
+  // helper meshes for picking (invisible)
+  const hitGeo = new THREE.SphereGeometry(.19, 8, 6);
+  const hitMat = new THREE.MeshBasicMaterial({ transparent:true, opacity:0, depthWrite:false });
+  const hit = new THREE.InstancedMesh(hitGeo, hitMat, Math.max(1,total));
+  hit.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  hit.frustumCulled = false;
+  hit.userData.walkerIds = walkers.map((_,i)=>i);
+  scene.add(hit);
+  walkerPick = hit;
+
+  walkers.forEach((w,i)=>{
+    const c = new THREE.Color(w.role.body);
+    ACTOR.body.setColorAt(i, c);
+    ACTOR.legs.setColorAt(i*2, new THREE.Color('#3a3430'));
+    ACTOR.legs.setColorAt(i*2+1, new THREE.Color('#3a3430'));
+    ACTOR.arms.setColorAt(i*2, new THREE.Color(w.role.body).offsetHSL(0,0,-.04));
+    ACTOR.arms.setColorAt(i*2+1, new THREE.Color(w.role.body).offsetHSL(0,0,-.04));
+    ACTOR.head.setColorAt(i, new THREE.Color(pick(SKIN)));
+    ACTOR.hair.setColorAt(i, new THREE.Color(w.role.hair));
+    ACTOR.eye.setColorAt(i*2, new THREE.Color('#241f1d'));
+    ACTOR.eye.setColorAt(i*2+1, new THREE.Color('#241f1d'));
+    ACTOR.hat.setColorAt(i, new THREE.Color(w.role.hat==='helmet'? '#fcea8b' : w.role.hat==='straw'? '#e8cf94' : w.role.body));
+    ACTOR.accBox.setColorAt(i, new THREE.Color(w.role.acc==='suitcase'? '#b4502c' : w.role.acc==='case'? '#3e7c8c' : w.role.acc==='basket'? '#b48560' : '#fcea8b'));
+    ACTOR.accCyl.setColorAt(i, new THREE.Color('#c5b5a7'));
+    ACTOR.shadow.setColorAt(i, new THREE.Color('#211d1d'));
+    w.idx = i;
+
+    // sprite badge
+    const spMat = new THREE.SpriteMaterial({ map:getBadge(w.cargo), transparent:true, depthWrite:false, depthTest:true, opacity:1 });
+    const sp = new THREE.Sprite(spMat);
+    sp.scale.set(.26,.26,.26);
+    sp.visible = false;
+    scene.add(sp);
+    w.sprite = sp;
+
+    // name bubble
+    const el = document.createElement('div');
+    el.className = 'bubble hide';
+    el.innerHTML = `${t('正在搬','Carrying')} <b>${t(w.cargo, w.flow.cargoEn)}</b>`;
+    const obj = new CSS2DObject(el);
+    obj.visible = false;
+    scene.add(obj);
+    w.nameEl = el; w.nameObj = obj;
+  });
+  Object.values(ACTOR).forEach(im=>{
+    if(im.instanceMatrix) im.instanceMatrix.needsUpdate = true;
+    if(im.instanceColor) im.instanceColor.needsUpdate = true;
+  });
+}
+
+function applyWalkerMatrices(){
+  const camDist = camera.position.distanceTo(controls.target);
+  const boost = clamp(camDist/20, 1, 1.45);
+  const tNow = state.reduced ? 0 : state.animTime;
+  walkers.forEach(w=>{
+    const route = w.flow.route;
+    if(!route || route.length < 2) return;
+    const total = w.flow.length;
+    const d = clamp(w.dist, 0, total);
+    // locate segment by arc length approximation
+    const f = d/total;
+    const fp = f*(route.length-1);
+    const i0 = Math.min(route.length-2, Math.floor(fp));
+    const ft = fp - i0;
+    const a = route[i0], b = route[i0+1];
+    const px = lerp(a.x,b.x,ft), pz = lerp(a.z,b.z,ft), py = lerp(a.y,b.y,ft);
+    const head = Math.atan2(b.x-a.x, b.z-a.z) + (w.dir<0? Math.PI : 0);
+    const speedPhase = w.wait>0? 0 : 1;
+    const ph = tNow*9 + w.phase*20;
+    const swing = speedPhase * Math.sin(ph) * .55;
+    const bob = speedPhase * Math.abs(Math.sin(ph)) * .012;
+    const s = w.height * w.scale * boost;
+
+    const base = new THREE.Matrix4().compose(
+      new THREE.Vector3(px, py + bob, pz),
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, head, 0)),
+      new THREE.Vector3(s, s, s)
+    );
+    const put = (im, index, lx,ly,lz, rx,ry,rz, sx,sy,sz, pivot)=>{
+      const local = new THREE.Matrix4().compose(
+        new THREE.Vector3(lx,ly,lz),
+        new THREE.Quaternion().setFromEuler(new THREE.Euler(rx,ry,rz)),
+        new THREE.Vector3(sx,sy,sz)
+      );
+      const m = base.clone().multiply(local);
+      im.setMatrixAt(index, m);
+    };
+    const i = w.idx;
+    const hipY = .12, shY = .235;
+    put(ACTOR.legs, i*2,   -.028, hipY, 0, swing,0,0, 1,1,1);
+    put(ACTOR.legs, i*2+1,  .028, hipY, 0, -swing,0,0, 1,1,1);
+    put(ACTOR.arms, i*2,   -.062, shY, 0, -swing*.82,0,.12, 1,1,1);
+    put(ACTOR.arms, i*2+1,  .062, shY, 0,  swing*.82,0,-.12, 1,1,1);
+    put(ACTOR.body, i, 0,.2,0, 0,0,0, 1,1,1);
+    put(ACTOR.head, i, 0,.318,0, 0,0,0, 1,1,1);
+    put(ACTOR.hair, i, 0,.322,0, 0,0,0, 1,1,1);
+    put(ACTOR.eye, i*2,   -.026,.324,.066, 0,0,0, 1,1,1);
+    put(ACTOR.eye, i*2+1,  .026,.324,.066, 0,0,0, 1,1,1);
+    put(ACTOR.shadow, i, 0,.004,0, 0,0,0, 1,1,1);
+    // hat
+    if(w.role.hat==='none') put(ACTOR.hat, i, 0,0,0, 0,0,0, 0.001,0.001,0.001);
+    else if(w.role.hat==='helmet') put(ACTOR.hat, i, 0,.352,0, 0,0,0, 1.05,.7,1.05);
+    else put(ACTOR.hat, i, 0,.40,0, 0,0,0, 1,1,1);
+    // accessories
+    const acc = w.role.acc;
+    if(acc==='suitcase') put(ACTOR.accBox, i, .09,.085,.03, 0,0,0, .062,.09,.035);
+    else if(acc==='pack') put(ACTOR.accBox, i, 0,.21,-.075, 0,0,0, .085,.12,.05);
+    else if(acc==='tablet') put(ACTOR.accBox, i, 0,.19,.075, .35,0,0, .1,.012,.075);
+    else if(acc==='case') put(ACTOR.accBox, i, .1,.06,.02, 0,0,0, .07,.08,.04);
+    else if(acc==='basket') put(ACTOR.accBox, i, -.09,.14,.02, 0,0,0, .07,.06,.07);
+    else if(acc==='bike'){ put(ACTOR.accBox, i, 0,.09,0, 0,0,0, .18,.02,.02); put(ACTOR.accCyl, i, 0,0,0, 0,0,0,.001,.001,.001); }
+    else if(acc==='cane') put(ACTOR.accCyl, i, .085,.07,.03, 0,0,0, .018,.28,.018);
+    else if(acc==='stroller'){ put(ACTOR.accBox, i, .13,.07,.06, 0,0,0, .11,.1,.08); put(ACTOR.accCyl, i, .13,.02,.06, 0,0,0,.001,.001,.001); }
+    else put(ACTOR.accBox, i, 0,0,0, 0,0,0, .001,.001,.001);
+    if(acc!=='cane' && acc!=='stroller') put(ACTOR.accCyl, i, 0,0,0, 0,0,0, .001,.001,.001);
+
+    // sprite + bubble positions
+    w.sprite.position.set(px, py + s*.72, pz);
+    const distCam = camera.position.distanceTo(w.sprite.position);
+    w.sprite.visible = distCam < 16 && state.toggles.cargo;
+    w.sprite.scale.setScalar(s*.58);
+    w.nameObj.position.set(px, py + s*.78, pz);
+    const showNames = state.toggles.names && distCam < 14;
+    w.nameObj.visible = showNames;
+    if(showNames){ w.nameEl.classList.remove('hide'); } else { w.nameEl.classList.add('hide'); }
+
+    // pick helper
+    const hitM = new THREE.Matrix4().compose(
+      new THREE.Vector3(px, py + s*.34, pz),
+      new THREE.Quaternion(),
+      new THREE.Vector3(s/.33, s/.33, s/.33)
+    );
+    walkerPick.setMatrixAt(i, hitM);
+  });
+  Object.values(ACTOR).forEach(im=>{ im.instanceMatrix.needsUpdate = true; });
+  walkerPick.instanceMatrix.needsUpdate = true;
+}
+
+function updateWalkers(dt){
+  if(state.reduced) dt = 0;
+  walkers.forEach(w=>{
+    if(w.wait > 0){ w.wait -= dt; }
+    else {
+      w.dist += w.speed * dt * w.dir;
+      if(w.dist >= w.flow.length){
+        w.dist = w.flow.length; w.dir = -1; w.wait = 1.4;
+        logEvent('arrive', w); logEvent('handoff', w);
+      } else if(w.dist <= 0){
+        w.dist = 0; w.dir = 1; w.wait = 1.4;
+        logEvent('depart', w);
+      }
+    }
+  });
+}
+/* =========================================================
+   LIGHT POOLS · PINS · HIGHLIGHT · THUMBNAILS
+   ========================================================= */
+let poolMat = null;
+function buildLightPools(){
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const g = cv.getContext('2d');
+  const grd = g.createRadialGradient(64,64,4,64,64,62);
+  grd.addColorStop(0,'rgba(255,214,150,.95)');
+  grd.addColorStop(.45,'rgba(255,201,130,.42)');
+  grd.addColorStop(1,'rgba(255,190,120,0)');
+  g.fillStyle = grd; g.fillRect(0,0,128,128);
+  const tex = new THREE.CanvasTexture(cv);
+  poolMat = new THREE.MeshBasicMaterial({ map:tex, transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending });
+  const geo = new THREE.CircleGeometry(.7, 18).rotateX(-Math.PI/2);
+  const pts = [];
+  islands.forEach(i=> (i.lamps||[]).forEach(p=> pts.push(p)));
+  const im = new THREE.InstancedMesh(geo, poolMat, pts.length);
+  pts.forEach((p,k)=>{
+    dummy.position.set(p.x, TOP+0.035, p.z);
+    dummy.rotation.set(0,0,0); dummy.scale.setScalar(1); dummy.updateMatrix();
+    im.setMatrixAt(k, dummy.matrix);
+  });
+  im.frustumCulled = false;
+  scene.add(im);
+}
+
+let pinGroup = null, pinLine = null, pinObjs = [];
+function clearPins(){
+  if(pinGroup){
+    pinObjs.forEach(o=>{ if(o.el && o.el.parentNode) o.el.parentNode.removeChild(o.el); scene.remove(o); });
+    pinObjs = [];
+    pinGroup = null;
+  }
+  if(pinLine){
+    scene.remove(pinLine);
+    pinLine.geometry.dispose();
+    pinLine = null;
+  }
+}
+function showPins(theme){
+  clearPins();
+  const isl = theme.island;
+  const verts = [];
+  theme.items.forEach((item, k)=>{
+    const el = document.createElement('div');
+    el.className = 'pin';
+    el.innerHTML = `<b>${k+1}</b><span>${t(item.zh,item.en)}</span>`;
+    el.addEventListener('pointerdown', ev=>ev.stopPropagation());
+    el.addEventListener('click', ev=>{ ev.stopPropagation(); selectItem(item); });
+    const obj = new CSS2DObject(el);
+    const y = item._top + 0.34;
+    obj.position.set(item._world.x, y, item._world.z);
+    scene.add(obj);
+    pinObjs.push(obj);
+    el.dataset.pin = '1';
+    verts.push(item._world.x, item._top+0.02, item._world.z, item._world.x, y-0.06, item._world.z);
+  });
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(verts,3));
+  pinLine = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color:0xdb6a41, transparent:true, opacity:.6, depthTest:false }));
+  pinLine.renderOrder = 8;
+  scene.add(pinLine);
+}
+
+function refreshColors(){
+  const apply = (meshes)=>{
+    meshes.forEach(im=>{
+      const ids = im.userData.itemIds, bases = im.userData.baseColors;
+      if(!ids) return;
+      let touched = false;
+      for(let i=0;i<ids.length;i++){
+        const id = ids[i];
+        if(!id) continue;
+        if(!selectedParts.has(id) && !litParts.has(id)) {
+          if(im.userData._painted && im.userData._painted[i]) { im.setColorAt(i, bases[i]); im.userData._painted[i] = false; touched = true; }
+          continue;
+        }
+        const c = bases[i].clone();
+        if(litParts.has(id)) c.lerp(COL.yellow, .22);
+        if(selectedParts.has(id)) c.lerp(COL.coral, .22);
+        im.setColorAt(i, c);
+        im.userData._painted = im.userData._painted || [];
+        im.userData._painted[i] = true;
+        touched = true;
+      }
+      if(touched && im.instanceColor) im.instanceColor.needsUpdate = true;
+    });
+  };
+  apply(kitMeshes); apply(smallMeshes);
+}
+
+function makeThumb(item){
+  if(item._thumb) return item._thumb;
+  if(!thumbRenderer){
+    thumbRenderer = new THREE.WebGLRenderer({ antialias:true, alpha:true, preserveDrawingBuffer:true });
+    thumbRenderer.setPixelRatio(2);
+    thumbRenderer.setSize(160,160);
+    thumbRenderer.outputColorSpace = THREE.SRGBColorSpace;
+    thumbRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+    thumbCam = new THREE.PerspectiveCamera(30, 1, .1, 30);
+    thumbCam.position.set(1.55, 1.15, 1.75);
+    thumbCam.lookAt(0, .52, 0);
+  }
+  const sc = new THREE.Scene();
+  sc.add(new THREE.HemisphereLight(0xeef6fa, 0x8f8270, 2.1));
+  const dl = new THREE.DirectionalLight(0xfff1de, 2.4);
+  dl.position.set(3,5,4); sc.add(dl);
+  const group = new THREE.Group();
+  (item._parts || []).forEach(p=>{
+    const geo = GEO[p.kind] || GEO.box;
+    const glow = p.kind.indexOf('glow')===0;
+    const mat = new THREE.MeshStandardMaterial({ color:new THREE.Color(p.color), roughness: glow?0.5:0.78, metalness:0, emissive: glow? new THREE.Color('#ffc777'):0x000000, emissiveIntensity: glow?1.4:0 });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(p.pos[0], p.pos[1], p.pos[2]);
+    m.rotation.set(p.rot?p.rot[0]:0, p.rot?p.rot[1]:0, p.rot?p.rot[2]:0);
+    m.scale.set(p.scl[0], p.scl[1], p.scl[2]);
+    group.add(m);
+  });
+  group.rotation.y = -0.35;
+  sc.add(group);
+  thumbRenderer.render(sc, thumbCam);
+  const url = thumbRenderer.domElement.toDataURL('image/png');
+  item._thumb = url;
+  group.traverse(o=>{ if(o.material) o.material.dispose(); });
+  return url;
+}
+
+/* =========================================================
+   SELECTION + CAMERA
+   ========================================================= */
+function focusCamera(offset, target){
+  const cardPad = (!isMobile() && document.getElementById('panel').classList.contains('show')) ? 1.5 : 0;
+  const mob = isMobile();
+  const pos = target.clone().add(offset.clone().multiplyScalar(mob? 1.55 : 1));
+  pos.x += cardPad;
+  const look = target.clone().add(new THREE.Vector3(0, .35, 0));
+  if(mob) look.y -= .55;
+  flyTo(pos, look);
+}
+function flyTo(pos, target, dur){
+  if(state.reduced || dur === 0){ camera.position.copy(pos); controls.target.copy(target); controls.update(); markDirty(); return; }
+  state.flying = {
+    t0: performance.now(), dur: dur || 800,
+    p0: camera.position.clone(), p1: pos,
+    t0v: controls.target.clone(), t1v: target
+  };
+}
+const easeInOutCubic = x => x<.5 ? 4*x*x*x : 1 - Math.pow(-2*x+2,3)/2;
+
+function clearSelection(){
+  state.selected = null;
+  selectedParts = new Set();
+  clearPins();
+  document.getElementById('panel').classList.remove('show');
+  refreshColors();
+  updateFlowsVisibility();
+  syncLabels();
+  markDirty();
+}
+
+function selectIsland(theme){
+  if(!theme || !theme.island) return;
+  state.selected = { type:'island', themeId:theme.id };
+  selectedParts = new Set([theme.id+'-hall', ...theme.items.map(i=>i.id)]);
+  showPins(theme);
+  refreshColors();
+  updateFlowsVisibility();
+  renderIslandCard(theme);
+  const isl = theme.island;
+  focusCamera(new THREE.Vector3(2.75,5.3,6.2), new THREE.Vector3(isl.x, TOP+.2, isl.z));
+  syncLabels();
+  flyLabels();
+  markDirty();
+}
+
+function selectItem(item){
+  if(!item) return;
+  state.selected = { type:'item', itemId:item.id, themeId:item.themeId };
+  selectedParts = new Set([item.id]);
+  const theme = themeById.get(item.themeId);
+  showPins(theme);
+  refreshColors();
+  updateFlowsVisibility();
+  renderItemCard(item);
+  focusCamera(new THREE.Vector3(1.6,2.5,3.2), item._world.clone());
+  syncLabels();
+  markDirty();
+}
+
+function selectFlow(flow){
+  const from = flow.fromTheme, to = flow.toTheme;
+  state.selected = { type:'flow', flowId:flow.id };
+  selectedParts = new Set([from.id+'-hall', to.id+'-hall', ...from.items.map(i=>i.id), ...to.items.map(i=>i.id)]);
+  clearPins();
+  refreshColors();
+  updateFlowsVisibility();
+  renderFlowCard(flow);
+  const mid = flow.points[Math.floor(flow.points.length/2)] || new THREE.Vector3();
+  focusCamera(new THREE.Vector3(2.4,4.6,5.4), mid.clone());
+  syncLabels();
+  markDirty();
+}
+
+function selectWalker(w){
+  const f = w.flow;
+  state.selected = { type:'walker', flowId:f.id, walker:w };
+  selectedParts = new Set([f.from+'-hall', f.to+'-hall']);
+  clearPins();
+  refreshColors();
+  updateFlowsVisibility();
+  renderWalkerCard(w);
+  const p = w.sprite.position.clone();
+  focusCamera(new THREE.Vector3(1.5,2.1,2.9), p.clone().setY(TOP));
+  syncLabels();
+  markDirty();
+}
+
+function updateFlowsVisibility(){
+  const sel = state.selected;
+  const activeThemes = new Set();
+  if(sel){
+    if(sel.themeId) activeThemes.add(sel.themeId);
+    if(sel.type==='flow' || sel.type==='walker'){
+      const f = flowById.get(sel.flowId);
+      if(f){ activeThemes.add(f.from); activeThemes.add(f.to); }
+    }
+  }
+  let any = false;
+  flows.forEach(f=>{
+    const related = state.toggles.flows || activeThemes.has(f.from) || activeThemes.has(f.to);
+    f.mesh.visible = related;
+    if(related) any = true;
+  });
+  document.getElementById('legend').classList.toggle('show', any);
+}
+
+function syncLabels(){
+  const sel = state.selected;
+  islands.forEach(isl=>{
+    isl.labelEl.classList.toggle('ink', !!(sel && sel.themeId === isl.theme.id));
+    isl.labelEl.classList.toggle('dim', !!(sel && sel.themeId && sel.themeId !== isl.theme.id));
+  });
+}
+function flyLabels(){}
+
+/* ---------- overview / aerial ---------- */
+function overviewDistance(){
+  const a = innerWidth/innerHeight;
+  if(a < 0.85) return 56;
+  if(a < 1.4) return 38;
+  return 28.5;
+}
+function goOverview(instant){
+  const dir = new THREE.Vector3(.24,.33,.87).normalize();
+  const target = new THREE.Vector3(0,.6,0);
+  const pos = target.clone().add(dir.multiplyScalar(overviewDistance()));
+  if(instant || state.reduced) flyTo(pos, target, 0);
+  else flyTo(pos, target, 800);
+  state.bird = false;
+  syncToggleButtons();
+}
+function goBird(){
+  const target = controls.target.clone();
+  const pos = target.clone().add(new THREE.Vector3(0.01,42,6));
+  if(state.reduced) flyTo(pos,target,0); else flyTo(pos,target,800);
+  state.bird = true;
+  syncToggleButtons();
+}
+/* =========================================================
+   UI
+   ========================================================= */
+const ROLE_LABEL = {
+  student:['學童','Student'], parent:['家長','Parent'], researcher:['研究員','Researcher'],
+  farmer:['農夫','Farmer'], worker:['工人','Worker'], traveler:['旅客','Traveller'],
+  elder:['長者','Elder'], commuter:['通勤族','Commuter']
+};
+const EV_LABEL = { depart:['出發','depart'], arrive:['抵達','arrive'], handoff:['交接','handoff'] };
+const panel = document.getElementById('panel');
+const panelBody = document.getElementById('panelBody');
+const sidebarBody = document.getElementById('listBody');
+
+function chipsHTML(list){
+  return `<div class="chips">${list.map(c=>`<span class="chip ${c.cls||''}">${c.html}</span>`).join('')}</div>`;
+}
+function renderIslandCard(theme){
+  const flowsOf = flows.filter(f=> f.from===theme.id || f.to===theme.id);
+  panelBody.innerHTML = `
+    <span class="eyebrow">${t('政策主題','THEME')} ${theme.num} / 12</span>
+    <h2>${theme.icon} ${t(theme.zh, theme.en)}</h2>
+    <p class="summary">${t(theme.zhSum, theme.enSum)}</p>
+    <h3>${t('這個主題的細項','POLICIES IN THIS THEME')}</h3>
+    <div>${theme.items.map((it,k)=>`
+      <button class="listRow" data-item="${it.id}"><b>${k+1}</b><span>${t(it.zh,it.en)}</span><span class="mdl">${MODEL_TAGS[it.model]||'MODEL'}</span></button>
+    `).join('')}</div>
+    <h3>${t('協作關係','COLLABORATION')}</h3>
+    ${flowsOf.length ? chipsHTML(flowsOf.map(f=>{
+      const other = f.from===theme.id ? f.to : f.from;
+      const th = themeById.get(other);
+      return { html:`${t(f.cargo,f.cargoEn)} <b style="font-weight:400;opacity:.55">→ ${th?t(th.zh,th.en):''}</b>`, cls:'coral' };
+    })) : `<p class="summary" style="font-size:12px;color:#9a8878">${t('目前沒有登記的協作線。','No collaboration links recorded.')}</p>`}
+    <div class="chips" style="margin-top:12px">
+      <button class="chip" data-fly="${theme.id}">${t('飛近一點','Fly closer')}</button>
+      <button class="chip" data-flows="1">${t('顯示協作線','Show links')}</button>
+    </div>`;
+  panel.classList.add('show');
+  openSheetIfMobile(panel);
+}
+function renderItemCard(item){
+  const theme = themeById.get(item.themeId);
+  const facts = item.facts.slice(0,3);
+  const phases = [1,2,3];
+  panelBody.innerHTML = `
+    <span class="eyebrow">${theme.num} ${t(theme.zh,theme.en)} · ${t('細項','POLICY')} ${item.index}</span>
+    <h2>${t(item.zh,item.en)}</h2>
+    <div class="thumbWrap"><img alt="" src="${makeThumb(item)}"><span class="lbl">${MODEL_TAGS[item.model]||'MODEL'}</span></div>
+    <p class="summary">${t(item.d,item.de)}</p>
+    <div class="facts">${facts.map(f=>`<div class="fact"><b>${f.v}</b><span>${t(f.zh,f.en)}</span></div>`).join('')}</div>
+    <h3>${t('四年時程','FOUR-YEAR TIMELINE')}</h3>
+    <div class="tl">
+      <div class="track"></div>
+      <div class="dots">${phases.map(p=>`<div class="dot ${p===item.phase?'now':''}"><i></i><b>${t(p===1?'第 1 年':p===2?'2–3 年':'第 4 年', p===1?'Year 1':p===2?'Years 2–3':'Year 4')}</b><span>${p===item.phase?t('現在進行','in progress'):''}</span></div>`).join('')}</div>
+    </div>
+    <h3>${t('所屬島嶼','ON THIS ISLAND')}</h3>
+    <button class="chip" data-theme="${theme.id}">${theme.icon} ${t(theme.zh,theme.en)}</button>
+    <div class="chips" style="margin-top:10px">
+      <button class="chip" data-item-next="${item.id}">${t('看下一個細項 →','Next policy →')}</button>
+    </div>`;
+  panel.classList.add('show');
+  openSheetIfMobile(panel);
+}
+function renderFlowCard(flow){
+  const from = flow.fromTheme, to = flow.toTheme;
+  panelBody.innerHTML = `
+    <span class="eyebrow">${t('協作線','COLLABORATION LINK')}</span>
+    <h2>${from.icon} ${t(from.zh,from.en)} <span style="color:var(--coral)">→</span> ${to.icon} ${t(to.zh,to.en)}</h2>
+    <p class="summary">${t('有人正在把東西從一座島搬到另一座島。這條線代表兩個政策主題之間實際發生的合作。','Someone is carrying something from one island to another. This line is a working relationship between two policy themes.')}</p>
+    <div class="kv"><span>${t('搬運物','Cargo')}</span><b>${t(flow.cargo, flow.cargoEn)}</b></div>
+    <div class="kv"><span>${t('走路的人','Walker')}</span><b>${(()=>{const r=ROLE_LABEL[flow.walker]||['居民','Resident']; return t(r[0],r[1]);})()}</b></div>
+    <div class="kv"><span>${t('證據等級','Evidence')}</span><b><span class="ev ${flow.evidence}">${flow.evidence}</span></b></div>
+    <div class="kv"><span>${t('路線長度','Route length')}</span><b>${flow.length.toFixed(1)} m</b></div>
+    <h3>${t('兩端的島','AT BOTH ENDS')}</h3>
+    <div class="chips">
+      <button class="chip" data-theme="${from.id}">${from.icon} ${t(from.zh,from.en)}</button>
+      <button class="chip" data-theme="${to.id}">${to.icon} ${t(to.zh,to.en)}</button>
+    </div>`;
+  panel.classList.add('show');
+  openSheetIfMobile(panel);
+}
+function renderWalkerCard(w){
+  const f = w.flow;
+  const r = ROLE_LABEL[w.roleKey]||['居民','Resident'];
+  panelBody.innerHTML = `
+    <span class="eyebrow">${t('正在路上','ON THE WAY')}</span>
+    <h2>${t('正在搬','Carrying')} ${t(f.cargo,f.cargoEn)}</h2>
+    <p class="summary">${t(r[0],r[1])} · ${t('從','from')} ${t(f.fromTheme.zh,f.fromTheme.en)} ${t('往','to')} ${t(f.toTheme.zh,f.toTheme.en)}</p>
+    <div class="kv"><span>${t('協作線','Link')}</span><b><span class="ev ${f.evidence}">${f.evidence}</span></b></div>
+    <div class="kv"><span>${t('速度','Speed')}</span><b>${w.speed.toFixed(2)} m/s</b></div>
+    <div class="kv"><span>${t('狀態','State')}</span><b>${w.wait>0?t('交接中','handing over'):w.dir>0?t('前往','outbound'):t('回程','returning')}</b></div>
+    <div class="chips" style="margin-top:12px">
+      <button class="chip" data-flow="${f.id}">${t('看這條協作線','View the link')}</button>
+    </div>`;
+  panel.classList.add('show');
+  openSheetIfMobile(panel);
+}
+
+function renderSidebar(){
+  const q = state.search.trim().toLowerCase();
+  if(state.tab==='themes'){
+    const rows = DATA.themes.map(theme=>{
+      const items = theme.items.filter(it=> !q || (it.zh+' '+it.en+' '+it.d+' '+it.de).toLowerCase().includes(q));
+      const themeMatch = !q || (theme.zh+' '+theme.en+' '+theme.zhSum).toLowerCase().includes(q);
+      if(!items.length && !themeMatch) return '';
+      const shown = themeMatch? theme.items : items;
+      return `<details ${q&&items.length?'open':''}>
+        <summary><span class="num">${theme.num}</span><span class="ico">${theme.icon}</span><span>${t(theme.zh,theme.en)}</span><span class="cnt">${theme.items.length}</span></summary>
+        <div class="items">
+          <button class="iRow" data-theme="${theme.id}"><b>→</b><span>${t('看整座島','Open island card')}</span></button>
+          ${shown.map((it,k)=>`<button class="iRow" data-item="${it.id}"><b>${theme.items.indexOf(it)+1}</b><span>${t(it.zh,it.en)}</span></button>`).join('')}
+        </div>
+      </details>`;
+    }).join('');
+    sidebarBody.innerHTML = rows || `<div class="empty">${t('找不到符合的關鍵字。','Nothing matches that search.')}</div>`;
+  } else {
+    const rows = flows.filter(f=>{
+      if(!q) return true;
+      const s = [f.cargo,f.cargoEn,f.fromTheme.zh,f.toTheme.zh,f.fromTheme.en,f.toTheme.en].join(' ').toLowerCase();
+      return s.includes(q);
+    }).map(f=>`
+      <button class="fRow" data-flow="${f.id}">
+        <span class="fl"><i>${f.fromTheme.icon}</i>${t(f.fromTheme.zh,f.fromTheme.en)} <i>→</i> ${t(f.toTheme.zh,f.toTheme.en)}</span>
+        <span class="sm"><span class="ev ${f.evidence}">${f.evidence}</span>${t(f.cargo,f.cargoEn)}</span>
+      </button>`).join('');
+    sidebarBody.innerHTML = rows || `<div class="empty">${t('沒有符合的協作線。','No links match.')}</div>`;
+  }
+}
+
+/* ---------- journal ---------- */
+const journalEvents = [];
+let journalDirty = true;
+let journalFilter = null;
+function logEvent(type, w){
+  journalEvents.unshift({ type, t: fmtTime(state.timeMin), flow:w.flow.id, role:w.roleKey, cargo:w.cargo, cargoEn:w.flow.cargoEn });
+  if(journalEvents.length > 40) journalEvents.length = 40;
+  journalDirty = true;
+}
+function renderJournal(){
+  if(!journalDirty) return;
+  journalDirty = false;
+  const list = document.getElementById('jList');
+  const rows = journalEvents.filter(e=> !journalFilter || e.flow===journalFilter).slice(0,26).map(e=>{
+    const r = ROLE_LABEL[e.role]||['居民','Resident'];
+    return `<div class="jev"><time>${e.t}</time><div><em>${t(r[0],r[1])}</em> ${t(EV_LABEL[e.type][0],EV_LABEL[e.type][1])} · ${t(e.cargo,e.cargoEn)}</div></div>`;
+  }).join('');
+  list.innerHTML = rows || `<div class="jev"><time>--:--</time><div>${t('等待第一位小人出發…','Waiting for the first walker…')}</div></div>`;
+  const f = document.getElementById('jFilters');
+  if(!f.dataset.built){
+    f.dataset.built = '1';
+    f.innerHTML = `<button class="on" data-jf="">${t('全部','ALL')}</button>` + flows.map(fl=>`<button data-jf="${fl.id}">${t(fl.fromTheme.zh,fl.fromTheme.en)}·${t(fl.cargo,fl.cargoEn)}</button>`).join('');
+    f.addEventListener('click', ev=>{
+      const b = ev.target.closest('[data-jf]'); if(!b) return;
+      journalFilter = b.dataset.jf || null;
+      f.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b));
+      journalDirty = true;
+    });
+  }
+}
+
+/* ---------- toggles ---------- */
+function syncToggleButtons(){
+  document.querySelectorAll('#hud [data-toggle]').forEach(b=>{
+    const k = b.dataset.toggle;
+    const on = k==='bird' ? state.bird : (k==='journal' ? state.toggles.journal : state.toggles[k]);
+    b.classList.toggle('on', !!on);
+  });
+}
+function setToggle(k){
+  if(k==='bird'){ state.bird? goOverview(): goBird(); syncToggleButtons(); return; }
+  if(k==='journal'){ state.toggles.journal = !state.toggles.journal; document.getElementById('journal').classList.toggle('show', state.toggles.journal); syncToggleButtons(); return; }
+  state.toggles[k] = !state.toggles[k];
+  if(k==='flows') updateFlowsVisibility();
+  syncToggleButtons();
+  markDirty();
+}
+
+/* ---------- bottom sheets ---------- */
+function openSheetIfMobile(el){
+  if(isMobile()) el.classList.add('show');
+}
+function setupSheets(){
+  document.querySelectorAll('#panel, #sidebar').forEach(el=>{
+    const grab = document.createElement('div');
+    grab.className = 'grab';
+    grab.style.cssText = 'height:22px;display:grid;place-items:center;flex:0 0 22px;cursor:grab';
+    grab.innerHTML = '<span style="width:38px;height:4px;border-radius:4px;background:rgba(74,42,20,.18);display:block"></span>';
+    el.prepend(grab);
+    let sy = 0, sh = 0;
+    grab.addEventListener('pointerdown', e=>{
+      sy = e.clientY; sh = el.getBoundingClientRect().height;
+      grab.setPointerCapture(e.pointerId);
+    });
+    grab.addEventListener('pointermove', e=>{
+      if(!grab.hasPointerCapture(e.pointerId)) return;
+      const h = clamp(sh + (sy-e.clientY), 64, innerHeight*0.92);
+      el.style.height = h+'px';
+    });
+  });
+}
+/* ---------- environment ---------- */
+let lastSlotKey = '';
+function updateEnvironment(){
+  sampleDay(state.timeMin);
+  const min = (Math.round(state.timeMin/10)*10) % 1440;
+  const tt = clamp((min-360)/720, 0, 1);
+  const az = Math.PI*(0.15 + 0.7*tt);
+  const el = 0.35 + Math.sin(tt*Math.PI)*0.75;
+  const dir = new THREE.Vector3(Math.cos(az)*Math.cos(el), Math.sin(el), 0.55*Math.cos(el)+0.35).normalize();
+  skyNow.dir.copy(dir);
+  sun.position.set(0,.4,0).addScaledVector(dir, 40);
+  sun.color.copy(skyNow.sun);
+  sun.intensity = skyNow.sunI;
+  hemi.color.copy(skyNow.hs);
+  hemi.groundColor.copy(skyNow.hg);
+  hemi.intensity = skyNow.hi;
+  fill.intensity = .2 + skyNow.sunI*.05;
+
+  skyMat.uniforms.uTop.value.copy(skyNow.top);
+  skyMat.uniforms.uHorizon.value.copy(skyNow.hor);
+  skyMat.uniforms.uNight.value = skyNow.night;
+  skyMat.uniforms.uSun.value.copy(skyNow.sun).multiplyScalar(clamp(skyNow.sunI/2.9,0,1));
+  skyMat.uniforms.uSunDir.value.copy(dir);
+
+  scene.fog.color.copy(skyNow.hor);
+  document.documentElement.style.setProperty('--fog', '#'+skyNow.hor.getHexString());
+
+  waterMat.uniforms.uTime.value = state.reduced ? 0 : state.animTime;
+  waterMat.uniforms.uNight.value = skyNow.night;
+  waterMat.uniforms.uDeep.value.copy(skyNow.water);
+  waterMat.uniforms.uShallow.value.copy(skyNow.water).lerp(COL.white, .45);
+
+  matGlow.emissiveIntensity = 0.15 + skyNow.night*3.2;
+  if(poolMat) poolMat.opacity = skyNow.night*.55;
+  if(buildRidges.list) buildRidges.list.forEach(m=>{
+    m.material.color.copy(m.userData.ridgeColor).lerp(skyNow.hor, m.userData.ridgeMix);
+  });
+
+  const slot = currentDaySlot();
+  const key = slot.at + '|' + state.timeMin.toFixed(0);
+  const slotKey = String(slot.at);
+  if(slotKey !== lastSlotKey){
+    lastSlotKey = slotKey;
+    litParts = new Set(slot.items);
+    refreshColors();
+  }
+}
+
+/* ---------- label collision ---------- */
+function overlaps(a,b,pad){
+  return a.left < b.right+pad && a.right > b.left-pad && a.top < b.bottom+pad && a.bottom > b.top-pad;
+}
+let labelTick = 0;
+function layoutLabels(){
+  const uiSel = '#panel.show,#sidebar,#journal,#hud,#brand,#toolLeft,#legend.show';
+  const blocks = [...document.querySelectorAll(uiSel)].map(el=>el.getBoundingClientRect());
+  const kept = [];
+  document.querySelectorAll('#labels .islLabel, #labels .pin, #labels .bubble').forEach(el=>{
+    el.classList.remove('mini');
+    if(el.classList.contains('hide')){ el.style.visibility = 'hidden'; return; }
+    let r = el.getBoundingClientRect();
+    if(!r.width){ el.style.visibility='hidden'; return; }
+    if(blocks.some(b=> overlaps(r,b,4))){ el.style.visibility='hidden'; return; }
+    if(kept.some(k=> overlaps(r,k,8))){
+      if(el.classList.contains('pin')){
+        el.classList.add('mini');
+        r = el.getBoundingClientRect();
+        if(kept.some(k=> overlaps(r,k,8))){ el.style.visibility='hidden'; return; }
+      } else { el.style.visibility='hidden'; return; }
+    }
+    el.style.visibility = '';
+    kept.push(r);
+  });
+}
+
+/* ---------- interactions ---------- */
+const raycaster = new THREE.Raycaster();
+const pointer = { down:false, x:0, y:0, moved:0 };
+function setupInteraction(){
+  const dom = renderer.domElement;
+  dom.addEventListener('pointerdown', e=>{ pointer.down = true; pointer.x = e.clientX; pointer.y = e.clientY; pointer.moved = 0; });
+  dom.addEventListener('pointermove', e=>{ if(pointer.down) pointer.moved = Math.max(pointer.moved, Math.hypot(e.clientX-pointer.x, e.clientY-pointer.y)); });
+  dom.addEventListener('pointerup', e=>{
+    if(!pointer.down) return;
+    pointer.down = false;
+    if(pointer.moved > 6) return;
+    handlePick(e.clientX, e.clientY);
+  });
+}
+function handlePick(cx, cy){
+  const r = renderer.domElement.getBoundingClientRect();
+  const ndc = new THREE.Vector2(((cx-r.left)/r.width)*2-1, -((cy-r.top)/r.height)*2+1);
+  raycaster.setFromCamera(ndc, camera);
+  const targets = [...pickables, ...kitMeshes, walkerPick, ...flows.map(f=>f.mesh).filter(m=>m.visible)];
+  const hits = raycaster.intersectObjects(targets, false);
+  for(const h of hits){
+    const o = h.object;
+    if(o === walkerPick && o.userData.walkerIds){
+      const w = walkers[o.userData.walkerIds[h.instanceId]];
+      if(w){ selectWalker(w); return; }
+    }
+    if(o.userData && o.userData.flowId){ const f = flowById.get(o.userData.flowId); if(f){ selectFlow(f); return; } }
+    if(o.userData && o.userData.itemIds && h.instanceId != null){
+      const id = o.userData.itemIds[h.instanceId];
+      if(id){
+        if(id.endsWith('-hall')){ selectIsland(themeById.get(id.replace('-hall',''))); }
+        else { selectItem(itemById.get(id)); }
+        return;
+      }
+    }
+    if(o.userData && o.userData.islandId){
+      selectIsland(themeById.get(o.userData.islandId)); return;
+    }
+  }
+}
+
+function setupUI(){
+  applyStaticLang();
+  setupSheets();
+  renderSidebar();
+  renderJournal();
+
+  document.getElementById('panelClose').addEventListener('click', clearSelection);
+  document.getElementById('btnOverview').addEventListener('click', ()=> goOverview());
+  document.getElementById('btnList').addEventListener('click', ()=>{
+    const sb = document.getElementById('sidebar');
+    sb.classList.toggle('show');
+    document.getElementById('btnList').classList.toggle('on', sb.classList.contains('show'));
+  });
+  document.getElementById('btnHelp').addEventListener('click', ()=> showTour());
+
+  document.querySelectorAll('#hud [data-toggle]').forEach(b=>{
+    b.addEventListener('click', ()=> setToggle(b.dataset.toggle));
+  });
+  document.querySelectorAll('#hud [data-time]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      state.timeMin = Number(b.dataset.time);
+      updateEnvironment(); markDirty();
+      toast(t('跳到 ','Jumped to ')+fmtTime(state.timeMin));    });
+  });
+  document.getElementById('mobileTime').addEventListener('click', ()=>{
+    document.getElementById('hud').classList.toggle('mobOpen');
+  });
+
+  document.querySelectorAll('.tabs button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      state.tab = b.dataset.tab;
+      document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on', x===b));
+      renderSidebar();
+    });
+  });
+  const search = document.getElementById('search');
+  search.addEventListener('input', ()=>{ state.search = search.value; renderSidebar(); markDirty(); });
+
+  panelBody.addEventListener('click', ev=>{
+    const tEl = ev.target.closest('[data-item],[data-theme],[data-flow],[data-item-next],[data-flows],[data-fly]');
+    if(!tEl) return;
+    if(tEl.dataset.item){ const it = itemById.get(tEl.dataset.item); if(it) selectItem(it); }
+    else if(tEl.dataset.theme){ const th = themeById.get(tEl.dataset.theme); if(th) selectIsland(th); }
+    else if(tEl.dataset.flow){ const f = flowById.get(tEl.dataset.flow); if(f) selectFlow(f); }
+    else if(tEl.dataset.itemNext){
+      const it = itemById.get(tEl.dataset.itemNext);
+      if(it){ const th = themeById.get(it.themeId); const nx = th.items[(th.items.indexOf(it)+1)%th.items.length]; selectItem(nx); }
+    }
+    else if(tEl.dataset.flows){ state.toggles.flows = true; updateFlowsVisibility(); syncToggleButtons(); toast(t('協作線已顯示','Collaboration links on')); }
+    else if(tEl.dataset.fly){ const th = themeById.get(tEl.dataset.fly); if(th) selectIsland(th); }
+    if(isMobile()){ panel.classList.add('show'); }
+  });
+
+  sidebarBody.addEventListener('click', ev=>{
+    const el = ev.target.closest('[data-item],[data-flow],[data-theme]');
+    if(!el) return;
+    if(el.dataset.item){ const it = itemById.get(el.dataset.item); if(it) selectItem(it); }
+    else if(el.dataset.flow){ const f = flowById.get(el.dataset.flow); if(f) selectFlow(f); }
+    else if(el.dataset.theme){ const th = themeById.get(el.dataset.theme); if(th) selectIsland(th); }
+    if(isMobile()){ document.getElementById('sidebar').classList.remove('show'); }
+  });
+
+  document.getElementById('tourGo').addEventListener('click', hideTour);
+
+  addEventListener('keydown', e=>{
+    if(e.key === 'Escape'){ clearSelection(); document.getElementById('sidebar').classList.remove('show'); return; }
+    if(e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+      const off = camera.position.clone().sub(controls.target);
+      if(e.key==='ArrowLeft' || e.key==='ArrowRight'){
+        off.applyAxisAngle(UP, e.key==='ArrowLeft'? -0.12 : 0.12);
+      } else {
+        const ang = Math.atan2(off.z, off.x);
+        const rad = Math.hypot(off.x,off.z);
+        const nz = clamp(rad + (e.key==='ArrowUp'? -1.2: 1.2), 4, 60);
+        off.x = Math.cos(ang)*nz; off.z = Math.sin(ang)*nz;
+      }
+      camera.position.copy(controls.target).add(off);
+      controls.update(); markDirty();
+      e.preventDefault();
+    }
+  });
+
+  syncToggleButtons();
+  addClockPill();
+}
+
+function addClockPill(){
+  const grp = document.querySelector('#hud .timeGrp');
+  if(!grp || document.getElementById('clockNow')) return;
+  const d = document.createElement('div');
+  d.id = 'clockNow';
+  d.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 9px 0 5px;font-family:var(--mono);font-size:12px;font-weight:700;line-height:1.2;letter-spacing:.5px';
+  grp.prepend(d);
+}
+function updateClockPill(){
+  const d = document.getElementById('clockNow');
+  if(!d) return;
+  const slot = currentDaySlot();
+  d.innerHTML = `${fmtTime(state.timeMin)}<span style="font-size:8px;letter-spacing:1.4px;color:#9a8878;font-weight:700">&nbsp;${t(slot.zh,slot.en)}</span>`;
+}
+
+let toastTimer = null;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.classList.remove('show'), 2000);
+}
+
+function showTour(){
+  document.getElementById('tour').classList.add('show');
+}
+function hideTour(){
+  document.getElementById('tour').classList.remove('show');
+  try{ localStorage.setItem('policyIslandTourV1','1'); }catch(err){}
+}
+function maybeTour(){
+  let seen = false;
+  try{ seen = localStorage.getItem('policyIslandTourV1')==='1'; }catch(err){}
+  if(!seen) setTimeout(showTour, 700);
+}
+
+function setupResize(){
+  const stage = document.getElementById('stage');
+  const ro = new ResizeObserver(()=>{
+    const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight;
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+    renderer.setPixelRatio(Math.min(devicePixelRatio||1, isMobile()?1.4:1.75));
+    renderer.setSize(w,h);
+    labelRenderer.setSize(w,h);
+    markDirty();
+  });
+  ro.observe(stage);
+  addEventListener('resize', ()=>{ markDirty(); });
+}
+function setupReducedMotion(){
+  const mq = matchMedia('(prefers-reduced-motion: reduce)');
+  const apply = ()=>{
+    state.reduced = mq.matches;
+    if(state.reduced){
+      document.querySelectorAll('.pin, .islLabel, .bubble').forEach(el=> el.style.transition='none');
+    }
+    markDirty();
+  };
+  apply();
+  if(mq.addEventListener) mq.addEventListener('change', apply);
+  else if(mq.addListener) mq.addListener(apply);
+}
+/* =========================================================
+   LOOP
+   ========================================================= */
+function animate(now){
+  requestAnimationFrame(animate);
+  const dtRaw = clockObj.getDelta();
+  const dt = Math.min(dtRaw, .08);
+  let dirty = needsRender;
+
+  if(!state.paused && !state.reduced){
+    state.timeMin = (state.timeMin + dt*10) % 1440;
+    state.animTime += dt;
+    updateWalkers(dt);
+    cloudGroup.forEach(g=>{
+      g.position.x += g.userData.speed * dt;
+      if(g.position.x > 82) g.position.x = -82;
+    });
+    flows.forEach(f=>{ f.material.uniforms.uTime.value = state.animTime; });
+    if(++frameNo % 7 === 0) updateClockPill();
+    dirty = true;
+  }
+
+  if(state.flying){
+    const f = state.flying;
+    const k = clamp((now - f.t0)/f.dur, 0, 1);
+    const e = easeInOutCubic(k);
+    camera.position.lerpVectors(f.p0, f.p1, e);
+    controls.target.lerpVectors(f.t0v, f.t1v, e);
+    if(k >= 1) state.flying = null;
+    dirty = true;
+  }
+
+  controls.update();
+
+  if(dirty){
+    updateEnvironment();
+    applyWalkerMatrices();
+    const camDist = camera.position.distanceTo(controls.target);
+    smallMeshes.forEach(m=>{ m.visible = camDist < 26 && !state.bird; });
+    islands.forEach(isl=>{ isl.label.visible = !state.bird; });
+    if(pinObjs.length) pinObjs.forEach(p=>{ p.visible = camDist < 34; });
+    if(pinLine) pinLine.visible = camDist < 34;
+    if(++labelTick % 8 === 0) layoutLabels();
+    renderJournal();
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
+    needsRender = false;
+  } else {
+    renderJournal();
+  }
+}
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+function boot(){
+  try{
+    const brandSpan = document.querySelector('#brand h1 span[data-en]');
+    if(brandSpan){ brandSpan.dataset.zh = DATA.city.zh; brandSpan.dataset.en = DATA.city.en; }
+    applyStaticLang();
+    initRenderer();
+    buildSky();
+    buildWater();
+    buildLights();
+    buildTerrain();
+    buildBackgroundTrees();
+    buildRidges();
+    buildClouds();
+    buildSeaProps();
+    buildIslands();
+    buildBuildings();
+    buildWalkGraph();
+    buildFlows();
+    kitMeshes = makeKitMeshes(kitEntries, false);
+    smallMeshes = makeKitMeshes(smallEntries, true);
+    buildLightPools();
+    buildWalkers();
+    setupUI();
+    setupInteraction();
+    setupResize();
+    setupReducedMotion();
+    goOverview(true);
+    updateEnvironment();
+    updateFlowsVisibility();
+    refreshColors();
+    applyWalkerMatrices();
+    updateClockPill();
+    renderSidebar();
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
+    window.__islandBoot = true;
+    window.__island = { scene, camera, controls, flows, walkers, islands, state, kitMeshes, smallMeshes, renderer };
+    const loader = document.getElementById('loader');
+    loader.classList.add('done');
+    setTimeout(()=>{ loader.style.display = 'none'; }, 650);
+    maybeTour();
+    animate(performance.now());
+  } catch(err){
+    console.error(err);
+    showLoadError(t('初始化失敗：','Init failed: ') + (err && err.message ? err.message : err));
+  }
+}
+boot();
+</script>
+</body>
+</html>
